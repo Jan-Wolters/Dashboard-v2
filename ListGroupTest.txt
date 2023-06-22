@@ -1,17 +1,7 @@
-import React, { useEffect, useState } from "react";
 import { ListItem } from "./components/ListItem";
-
-interface Repository {
-  name: string;
-  id: number;
-  capacityGB: number;
-  freeGB: number;
-  usedSpaceGB: number;
-}
+import { useEffect, useState } from "react";
 
 function ListGroup() {
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-
   const initialBedrijf = [
     {
       name: "Schoonderwolf Diensten BV",
@@ -19,55 +9,87 @@ function ListGroup() {
       statusN: true,
       LastBackUp: "16-05-2023",
     },
+    {
+      name: "Milin",
+      statusB: false,
+      statusN: false,
+      LastBackUp: "16-05-2023",
+    },
+
+    {
+      name: "Galvano Holding BV",
+      statusB: false,
+      statusN: false,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "Polytech Holding BV",
+      statusB: false,
+      statusN: false,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "Fenix Industries BV",
+      statusB: true,
+      statusN: false,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "Bear Optima Wood",
+      statusB: true,
+      statusN: true,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "Profilelaser",
+      statusB: true,
+      statusN: true,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "Metaalbewerkingsbedrijf De Vries BV",
+      statusB: true,
+      statusN: true,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "Seine Metaal BV",
+      statusB: true,
+      statusN: true,
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "REA Industrie en Handelsonderneming",
+      statusB: true,
+      statusN: true,
+      LastBackUp: "16-05-2023",
+    },
   ];
 
-  const [bedrijf, setBedrijf] = useState(initialBedrijf);
+  const [Bedrijf, setBedrijf] = useState(initialBedrijf);
   const [allSuccess, setAllSuccess] = useState(false);
-  const [warningMessages, setWarningMessages] = useState<string[]>([]);
-  const [dangerItems, setDangerItems] = useState<string[]>([]);
+  const [warningMessages, setWarningMessages] = useState([]);
+  const [dangerItems, setDangerItems] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/data");
-        const jsonData = await response.json();
-
-        const formattedData: Repository[] = jsonData.map((data: any) => ({
-          name: data.name,
-          id: data.id,
-          capacityGB: data.capacityGB,
-          freeGB: data.freeGB,
-          usedSpaceGB: data.usedSpaceGB,
-        }));
-
-        setRepositories(formattedData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const sortBedrijf = (bedrijfArray: any[]) => {
+    const sortBedrijf = (bedrijfArray) => {
       return bedrijfArray.sort((a, b) => {
         const aFailCount = (a.statusB ? 0 : 1) + (a.statusN ? 0 : 1);
         const bFailCount = (b.statusB ? 0 : 1) + (b.statusN ? 0 : 1);
 
         if (aFailCount === bFailCount) {
-          return 0;
+          return 0; // Leave items with equal fail count in their original order
         } else if (aFailCount === 2 || bFailCount === 0) {
-          return -1;
+          return -1; // Put items with both statusB and statusN as false at the top
         } else if (aFailCount === 0 || bFailCount === 2) {
-          return 1;
+          return 1; // Put items with both statusB and statusN as true at the bottom
         } else {
-          return aFailCount - bFailCount;
+          return aFailCount - bFailCount; // Sort the rest based on fail count
         }
       });
     };
 
-    const checkAllSuccess = (bedrijfArray: any[]) => {
+    const checkAllSuccess = (bedrijfArray) => {
       const sortedBedrijf = sortBedrijf(bedrijfArray);
 
       const warningItems = sortedBedrijf.filter(
@@ -88,14 +110,14 @@ function ListGroup() {
           }
         });
 
-        setWarningMessages(messages.filter(Boolean));
+        setWarningMessages(messages.filter(Boolean)); // Filter out undefined messages
       } else {
         setWarningMessages([]);
       }
 
       setDangerItems(dangerItems);
 
-      return sortedBedrijf.every((item) => item.statusB && item.statusN);
+      return sortedBedrijf.every((item) => item.statusB && item.statusN); // Check if both statusB and statusN are true for all items
     };
 
     setBedrijf((prevBedrijf) => {
@@ -173,25 +195,22 @@ function ListGroup() {
         className="d-fill"
         style={{ overflowY: "auto", maxHeight: "750px" }}
       >
-        {bedrijf.length === 0 ? (
+        {Bedrijf.length === 0 ? (
           <p className="text-center">Niks gevonden</p>
         ) : (
           <ul className="list-group">
-            {bedrijf.map((item) => (
+            {Bedrijf.map((item) => (
               <ListItem
                 key={item.name}
                 item={item.name}
                 statusB={item.statusB}
                 statusN={item.statusN}
                 LastBackUp={item.LastBackUp}
-                repositories={repositories}
               />
             ))}
           </ul>
         )}
       </div>
-
-      {/* Your repositories code goes here */}
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import ListGroup from "./ListGroup";
-
 import NavBar from "./components/NavBar";
 
 function Dashboard() {
