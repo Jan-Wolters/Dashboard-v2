@@ -8,15 +8,24 @@ interface Repository {
   freeGB: number;
   usedSpaceGB: number;
 }
+///////////////////////////////////////////////////////////////////////
+interface Sessions {
+  ids: number;
+  names: string;
+  endTime: Date;
+  resultResult: string;
+  resultMessage: string;
+}
 
 function ListGroup() {
   const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [sessions, setSessions] = useState<Sessions[]>([]);
 
   const initialBedrijf = [
     {
       name: "Schoonderwolf Diensten BV",
-      statusB: true,
-      statusN: true,
+      statusB: "Success",
+      statusN: "Failed",
       LastBackUp: "16-05-2023",
     },
   ];
@@ -29,18 +38,12 @@ function ListGroup() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:3001/data");
-        const jsonData = await response.json();
-
-        const formattedData: Repository[] = jsonData.map((data: any) => ({
-          name: data.name,
-          id: data.id,
-          capacityGB: data.capacityGB,
-          freeGB: data.freeGB,
-          usedSpaceGB: data.usedSpaceGB,
-        }));
-
-        setRepositories(formattedData);
+        const [repositoriesData, sessionsData] = await Promise.all([
+          fetchRepositories(),
+          fetchSessions(),
+        ]);
+        setRepositories(repositoriesData);
+        setSessions(sessionsData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -48,6 +51,102 @@ function ListGroup() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const sortBedrijf = (bedrijfArray: any[]) => {
+      return bedrijfArray.sort((a, b) => {
+        const aFailCount = (a.statusB ? 0 : 1) + (a.statusN ? 0 : 1);
+        const bFailCount = (b.statusB ? 0 : 1) + (b.statusN ? 0 : 1);
+
+        if (aFailCount === bFailCount) {
+          return 0;
+        } else if (aFailCount === 2 || bFailCount === 0) {
+          return -1;
+        } else if (aFailCount === 0 || bFailCount === 2) {
+          return 1;
+        } else {
+          return aFailCount - bFailCount;
+        }
+      });
+    };
+
+    const checkAllSuccess = (bedrijfArray: any[]) => {
+      const sortedBedrijf = sortBedrijf(bedrijfArray);
+
+      const warningItems = sortedBedrijf.filter(
+        (item) =>
+          (!item.statusB && item.statusN) || (item.statusB && !item.statusN)
+      );
+
+      const dangerItems = sortedBedrijf.filter(
+        (item) => !item.statusB && !item.statusN
+      );
+
+      if (warningItems.length > 0) {
+        const messages = warningItems.map((item) => {
+          if (!item.statusB && item.statusN) {
+            return `${item.name} heeft een Netwerk probleem.`;
+          } else if (item.statusB && !item.statusN) {
+            return `${item.name} heeft een Backup probleem.`;
+          }
+        });
+
+        setWarningMessages(messages.filter(Boolean));
+      } else {
+        setWarningMessages([]);
+      }
+
+      setDangerItems(dangerItems);
+
+      return sortedBedrijf.every((item) => item.statusB && item.statusN);
+    };
+
+    setBedrijf((prevBedrijf) => {
+      const sortedBedrijf = sortBedrijf(prevBedrijf);
+      setAllSuccess(checkAllSuccess(sortedBedrijf));
+      return sortedBedrijf;
+    });
+  }, []);
+
+  const fetchRepositories = async (): Promise<Repository[]> => {
+    try {
+      const response = await fetch("http://localhost:3001/data");
+      const jsonData = await response.json();
+
+      const formattedData: Repository[] = jsonData.map((data: any) => ({
+        name: data.name,
+        id: data.id,
+        capacityGB: data.capacityGB,
+        freeGB: data.freeGB,
+        usedSpaceGB: data.usedSpaceGB,
+      }));
+
+      return formattedData;
+    } catch (error) {
+      console.error("Error fetching repositories:", error);
+      return [];
+    }
+  };
+
+  const fetchSessions = async (): Promise<Sessions[]> => {
+    try {
+      const response = await fetch("http://localhost:3001/sessions");
+      const jsonData = await response.json();
+
+      const formattedSessions = jsonData.map((session: any) => ({
+        id: session.id,
+        name: session.name,
+        endTime: session.endTime.toLocaleString(), // Format the Date object to a string
+        resultResult: session.resultResult,
+        resultMessage: session.resultMessage,
+      }));
+
+      return formattedSessions;
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const sortBedrijf = (bedrijfArray: any[]) => {
@@ -185,6 +284,7 @@ function ListGroup() {
                 statusN={item.statusN}
                 LastBackUp={item.LastBackUp}
                 repositories={repositories}
+                formattedSessions={sessions}
               />
             ))}
           </ul>
