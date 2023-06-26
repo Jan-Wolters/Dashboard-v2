@@ -6,8 +6,13 @@ interface StatusIconProps {
 
 const StatusIcon: React.FC<StatusIconProps> = ({ resultMessage }) => {
   const getStatusClass = (resultMessage: string) => {
-    // Customize the logic to determine the background color based on the result message
-    return resultMessage === "Success" ? "bg-success" : "bg-danger";
+    if (resultMessage === "Success") {
+      return "bg-success";
+    } else if (resultMessage === "Warning") {
+      return "bg-warning";
+    } else {
+      return "bg-danger";
+    }
   };
 
   return (

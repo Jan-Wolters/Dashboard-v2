@@ -44,19 +44,58 @@ app.get("/data", (req, res) => {
       return;
     }
     console.log("Fetched data:", results); // Log the fetched data
-    res.json(results); // Send repositories as a JSON response
+
+    if (results.length === 0) {
+      res.json({ message: "No data found." });
+    } else {
+      res.json(results); // Send data as a JSON response
+    }
   });
 });
+
 app.get("/sessions", (req, res) => {
-  pool.query("SELECT * FROM sessions", (error, results) => {
+  pool.query("SELECT * FROM sessions ", (error, results) => {
     if (error) {
       console.error("Error executing SELECT query:", error);
       res.status(500).json({ error: "An error occurred while fetching data." });
       return;
     }
-    console.log("Fetched sessions:", results); // Log the fetched data
-    res.json(results); // Send repositories as a JSON response
+
+    if (results.length === 0) {
+      res.json({ message: "No sessions found." });
+    } else {
+      const formattedResults = results.map((session) => ({
+        ...session,
+        name: session.name.toLowerCase(), // Format the name to lowercase
+        endTime: new Date(session.endTime).toLocaleString(), // Format the date and time
+      }));
+
+      console.log("Fetched sessions:", formattedResults); // Log the fetched data
+      res.json(formattedResults); // Send sessions as a JSON response
+    }
   });
+});
+
+app.get("/backup", (req, res) => {
+  pool.query(
+    "SELECT * FROM backup WHERE platformName IN ('HyperV', 'CustomPlatform')",
+    (error, results) => {
+      if (error) {
+        console.error("Error executing SELECT query:", error);
+        res
+          .status(500)
+          .json({ error: "An error occurred while fetching data." });
+        return;
+      }
+
+      if (results.length === 0) {
+        res.json({ message: "No backup data found." });
+      } else {
+        console.log("Fetched backup:", results); // Log the fetched data
+        res.json(results); // Send backup data as a JSON response
+      }
+    }
+  );
 });
 /* endpoints
 http://localhost:3000/repositories
