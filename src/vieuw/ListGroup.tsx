@@ -6,15 +6,14 @@ function ListGroup() {
   const initialBedrijf = [
     {
       name: "Schoonderwolf Diensten BV",
-      resultResult: "Success",
+      statusB: "",
+      statusN: true,
       LastBackUp: "16-05-2023",
     },
   ];
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [sessions, setSessions] = useState<Sessions[]>([]);
   const [backup, setBackup] = useState<Backup[]>([]);
-  const [warningMessages, setWarningMessages] = useState<string[]>([]);
-  const [dangerItems, setDangerItems] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
@@ -26,34 +25,6 @@ function ListGroup() {
     };
 
     fetchDataAsync();
-  }, []);
-
-  useEffect(() => {
-    const generateStatusMessage = (item) => {
-      if (item.resultResult === "failed") {
-        return `${item.name} heeft een probleem.`;
-      } else if (item.resultResult === "warning") {
-        return `${item.name} heeft een waarschuwing.`;
-      } else {
-        return null; // No message for items with success status
-      }
-    };
-
-    const warningItems = initialBedrijf.filter(
-      (item) =>
-        item.resultResult === "warning" || item.resultResult === "failed"
-    );
-
-    const dangerItems = initialBedrijf.filter(
-      (item) => item.resultResult === "failed"
-    );
-
-    const warningMessages = warningItems
-      .map(generateStatusMessage)
-      .filter(Boolean);
-
-    setWarningMessages(warningMessages);
-    setDangerItems(dangerItems);
   }, []);
 
   return (
@@ -90,7 +61,8 @@ function ListGroup() {
                 <ListItem
                   key={item.name}
                   item={item.name}
-                  resultResult={item.resultResult}
+                  statusB={item.statusB}
+                  statusN={item.statusN}
                   LastBackUp={item.LastBackUp}
                   repositories={repositories}
                   formattedSessions={sessions}
