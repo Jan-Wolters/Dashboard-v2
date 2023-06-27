@@ -54,26 +54,31 @@ app.get("/data", (req, res) => {
 });
 
 app.get("/sessions", (req, res) => {
-  pool.query("SELECT * FROM sessions ", (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      res.status(500).json({ error: "An error occurred while fetching data." });
-      return;
-    }
+  pool.query(
+    "SELECT * FROM sessions WHERE name = 'hyper-v backup'ORDER BY endTime DESC LIMIT 5",
+    (error, results) => {
+      if (error) {
+        console.error("Error executing SELECT query:", error);
+        res
+          .status(500)
+          .json({ error: "An error occurred while fetching data." });
+        return;
+      }
 
-    if (results.length === 0) {
-      res.json({ message: "No sessions found." });
-    } else {
-      const formattedResults = results.map((session) => ({
-        ...session,
-        name: session.name.toLowerCase(), // Format the name to lowercase
-        endTime: new Date(session.endTime).toLocaleString(), // Format the date and time
-      }));
+      if (results.length === 0) {
+        res.json({ message: "No sessions found." });
+      } else {
+        const formattedResults = results.map((session) => ({
+          ...session,
+          name: session.name.toLowerCase(), // Format the name to lowercase
+          endTime: new Date(session.endTime).toLocaleString(), // Format the date and time
+        }));
 
-      console.log("Fetched sessions:", formattedResults); // Log the fetched data
-      res.json(formattedResults); // Send sessions as a JSON response
+        console.log("Fetched sessions:", formattedResults); // Log the fetched data
+        res.json(formattedResults); // Send sessions as a JSON response
+      }
     }
-  });
+  );
 });
 
 app.get("/backup", (req, res) => {

@@ -11,6 +11,29 @@ interface ListItemProps {
   formattedBackup: Backup[];
 }
 
+interface Repository {
+  name: string;
+  id: number;
+  capacityGB: number;
+  freeGB: number;
+  usedSpaceGB: number;
+}
+
+interface Sessions {
+  id: number;
+  name: string;
+  endTime: Date;
+  resultResult: string;
+  resultMessage: string;
+}
+
+interface Backup {
+  id: number;
+  platformName: string;
+  name: string;
+  creationTime: Date;
+}
+
 function ListItem({
   item,
   statusB,
@@ -91,31 +114,45 @@ function ListItem({
               <ul className="list-group">
                 {" "}
                 {/* Added list-group class */}
-                {repositories.map((repository) => (
-                  <li
-                    className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
-                    key={repository.id}
-                  >
-                    <div className="d-flex flex-fill">
-                      <span className="w-25 py-2 mx-1 fw-bold">
-                        {repository.name}
-                      </span>
-                      <div className="flex-fill py-2 mx-1">
-                        {repository.usedSpaceGB}
+                {repositories.map((repository) => {
+                  const progressValue =
+                    (repository.usedSpaceGB / repository.capacityGB) * 100;
+
+                  return (
+                    <li
+                      className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
+                      key={repository.id}
+                    >
+                      <div className="d-flex flex-fill">
+                        <span className="w-25 py-2 mx-1 fw-bold">
+                          {repository.name}
+                        </span>
+                        <div className="flex-fill py-2 mx-1">
+                          capacity = {repository.capacityGB}GB
+                        </div>
+                        <div className="flex-fill py-2 mx-1">
+                          usedSpace = {repository.usedSpaceGB}GB
+                        </div>
+                        <div className="flex-fill py-2 mx-1">
+                          freespace ={repository.freeGB}GB
+                        </div>
+
+                        <div className="flex-fill py-2 mx-1">
+                          <div className="progress">
+                            <div
+                              className="progress-bar"
+                              role="progressbar"
+                              aria-valuenow={progressValue}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              style={{ width: `${progressValue}%` }}
+                            ></div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-fill py-2 mx-1">
-                        {repository.capacityGB}
-                      </div>
-                      <div className="flex-fill py-2 mx-1">
-                        {repository.freeGB}
-                      </div>
-                      <div className="flex-fill py-2 mx-1">
-                        {repository.usedSpaceGB}
-                      </div>
-                      <div className="flex-fill py-2 mx-1"> {/*donut*/}</div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
