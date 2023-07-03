@@ -3,29 +3,40 @@ import { ListItem } from "./components/ListItem";
 import {
   Repository,
   Sessions,
-  Backup,
-  fetchData,
+  Repositorypro,
+  Sessionspro,
+  fetchData as fetchGroupData,
 } from "../model/repositories.tsx";
-import StatusMessage from "./components/Message.tsx"; // Import the StatusMessage component
+import StatusMessage from "./components/Message.tsx";
 
 function ListGroup() {
   const initialBedrijf = [
     {
-      name: "Schoonderwolf Diensten BV",
+      name: "heering",
+      LastBackUp: "16-05-2023",
+    },
+    {
+      name: "prolaser",
       LastBackUp: "16-05-2023",
     },
   ];
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [sessions, setSessions] = useState<Sessions[]>([]);
-  const [backup, setBackup] = useState<Backup[]>([]);
+  const [repositoriespro, setRepositoriespro] = useState<Repositorypro[]>([]);
+  const [sessionspro, setSessionspro] = useState<Sessionspro[]>([]);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
-      const [fetchedRepositories, fetchedSessions, fetchedBackup] =
-        await fetchData();
+      const [
+        fetchedRepositories,
+        fetchedSessions,
+        fetchedRepositoriespro,
+        fetchedSessionspro,
+      ] = await fetchGroupData();
       setRepositories(fetchedRepositories);
       setSessions(fetchedSessions);
-      setBackup(fetchedBackup);
+      setRepositoriespro(fetchedRepositoriespro);
+      setSessionspro(fetchedSessionspro);
     };
 
     fetchDataAsync();
@@ -34,8 +45,7 @@ function ListGroup() {
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
       <div>
-        {" "}
-        <StatusMessage sessions={sessions} />
+        <StatusMessage sessions={[...sessions, ...sessionspro]} />
       </div>
       <div id="head" className="border border-dark border border-3 mt-5">
         <div className="text-center py-3 position-relative d-flex align-items-center">
@@ -68,14 +78,14 @@ function ListGroup() {
                   LastBackUp={item.LastBackUp}
                   repositories={repositories}
                   formattedSessions={sessions}
-                  formattedBackup={backup}
+                  repositoriespro={repositoriespro}
+                  sessionspro={sessionspro}
                 ></ListItem>
               );
             })}
           </ul>
         )}
-      </div>{" "}
-      {/* Render the StatusMessage component */}
+      </div>
     </div>
   );
 }
