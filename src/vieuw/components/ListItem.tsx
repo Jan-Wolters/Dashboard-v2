@@ -44,8 +44,9 @@ function ListItem({
     setIsExpanded(!isExpanded);
   };
 
-  const shouldDisplaySessions = item === "heering" || item === "prolaser";
-  const shouldDisplayRepositories = item === "heering" || item === "prolaser";
+  const shouldDisplaySessions = item === "heering" || item === "Profile Laser";
+  const shouldDisplayRepositories =
+    item === "heering" || item === "Profile Laser";
 
   return (
     <li>
@@ -61,7 +62,7 @@ function ListItem({
                 resultMessage={
                   (item === "heering"
                     ? formattedSessions[0].resultResult
-                    : item === "prolaser"
+                    : item === "Profile Laser"
                     ? sessionspro[0].resultResult
                     : "") || statusN
                 }
@@ -75,7 +76,7 @@ function ListItem({
                 resultMessage={
                   (item === "heering"
                     ? formattedSessions[0].resultResult
-                    : item === "prolaser"
+                    : item === "Profile Laser"
                     ? sessionspro[0].resultResult
                     : "") || statusN
                 }
@@ -91,7 +92,7 @@ function ListItem({
             {shouldDisplaySessions && (
               <div className="border border-dark mt-2 mx-auto">
                 <div>
-                  <h1>{item === "heering" ? "Sessions" : "Sessionspro"}</h1>
+                  <h1>{item === "heering" ? "Sessions" : "Sessions"}</h1>
                 </div>
                 <ul
                   className="list-group"
@@ -139,15 +140,15 @@ function ListItem({
                   <h1>
                     {item === "heering"
                       ? "Repositories"
-                      : item === "prolaser"
-                      ? "Repositoriespro"
+                      : item === "Profile Laser"
+                      ? "Repositories"
                       : ""}
                   </h1>
                 </div>
                 <ul className="list-group">
                   {(item === "heering"
                     ? repositories
-                    : item === "prolaser"
+                    : item === "Profile Laser"
                     ? repositoriespro
                     : []
                   ).map((repository) => {
