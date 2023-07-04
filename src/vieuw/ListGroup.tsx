@@ -5,6 +5,8 @@ import {
   Sessions,
   Repositorypro,
   Sessionspro,
+  Repositorybear,
+  Sessionsbear,
   fetchData as fetchGroupData,
 } from "../model/repositories.tsx"; //import van reposetorie.tsx met de bijbehoorende data/info
 import StatusMessage from "./components/Message.tsx"; //import voor message componentt
@@ -20,6 +22,10 @@ function ListGroup() {
       name: "Profile Laser",
       LastBackUp: "16-05-2023",
     },
+    {
+      name: "Bear Optima Wood",
+      LastBackUp: "16-05-2023",
+    },
   ];
 
   //hier word array aan variable gekoppeld en data opgehaald
@@ -27,6 +33,10 @@ function ListGroup() {
   const [sessions, setSessions] = useState<Sessions[]>([]);
   const [repositoriespro, setRepositoriespro] = useState<Repositorypro[]>([]);
   const [sessionspro, setSessionspro] = useState<Sessionspro[]>([]);
+  const [repositoriesbear, setRepositoriesbear] = useState<Repositorybear[]>(
+    []
+  );
+  const [sessionsbear, setSessionsbear] = useState<Sessionsbear[]>([]);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
@@ -35,11 +45,15 @@ function ListGroup() {
         fetchedSessions,
         fetchedRepositoriespro,
         fetchedSessionspro,
+        fetchedRepositoriesbear,
+        fetchedSessionsbear,
       ] = await fetchGroupData();
       setRepositories(fetchedRepositories);
       setSessions(fetchedSessions);
       setRepositoriespro(fetchedRepositoriespro);
       setSessionspro(fetchedSessionspro);
+      setRepositoriesbear(fetchedRepositoriesbear);
+      setSessionsbear(fetchedSessionsbear);
     };
 
     fetchDataAsync();
@@ -49,7 +63,9 @@ function ListGroup() {
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
       <div>
-        <StatusMessage sessions={[...sessions, ...sessionspro]} />{" "}
+        <StatusMessage
+          sessions={[...sessions, ...sessionspro, ...sessionsbear]}
+        />{" "}
         {/*hier wordt de message aangeroepen */}
       </div>
       {/*title balk van het dasgboard  */}
@@ -86,6 +102,8 @@ function ListGroup() {
                   formattedSessions={sessions}
                   repositoriespro={repositoriespro}
                   sessionspro={sessionspro}
+                  repositoriesbear={repositoriesbear}
+                  sessionsbear={sessionsbear}
                 ></ListItem>
               );
             })}

@@ -13,6 +13,7 @@ export interface Sessions {
   resultResult: string;
   resultMessage: string;
 }
+
 export interface Repositorypro {
   name: string;
   id: number;
@@ -28,8 +29,31 @@ export interface Sessionspro {
   resultResult: string;
   resultMessage: string;
 }
+export interface Repositorybear {
+  name: string;
+  id: number;
+  capacityGB: number;
+  freeGB: number;
+  usedSpaceGB: number;
+}
+
+export interface Sessionsbear {
+  id: number;
+  name: string;
+  endTime: Date;
+  resultResult: string;
+  resultMessage: string;
+}
+
 export const fetchData = async (): Promise<
-  [Repository[], Sessions[], Repositorypro[], Sessionspro[]]
+  [
+    Repository[],
+    Sessions[],
+    Repositorypro[],
+    Sessionspro[],
+    Repositorybear[],
+    Sessionsbear[]
+  ]
 > => {
   try {
     const fetchEndpoint = async (endpoint: string) => {
@@ -38,56 +62,40 @@ export const fetchData = async (): Promise<
       return jsonData;
     };
 
-    const repositoriesData = await fetchEndpoint(
-      "http://localhost:3002/repositories"
-    );
-    const sessionsData = await fetchEndpoint("http://localhost:3002/sessions");
-    const repositoriesproData = await fetchEndpoint(
-      "http://localhost:3002/repositoriespro"
-    );
-    const sessionsproData = await fetchEndpoint(
-      "http://localhost:3002/sessionspro"
-    );
+    const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
+      const data = await fetchEndpoint(endpoint);
+      return data.map((item: any) => item);
+    };
 
-    const repositories: Repository[] = repositoriesData.map((data: any) => ({
-      name: data.name,
-      id: data.id,
-      capacityGB: data.capacityGB,
-      freeGB: data.freeGB,
-      usedSpaceGB: data.usedSpaceGB,
-    }));
-
-    const sessions: Sessions[] = sessionsData.map((data: any) => ({
-      id: data.id,
-      name: data.name,
-      endTime: data.endTime,
-      resultResult: data.resultResult,
-      resultMessage: data.resultMessage,
-    }));
-
-    const repositoriespro: Repositorypro[] = repositoriesproData.map(
-      (data: any) => ({
-        name: data.name,
-        id: data.id,
-        capacityGB: data.capacityGB,
-        freeGB: data.freeGB,
-        usedSpaceGB: data.usedSpaceGB,
-      })
+    const repositoriesData = await fetchAndMapData<Repository>(
+      "http://localhost:3003/repositories"
+    );
+    const sessionsData = await fetchAndMapData<Sessions>(
+      "http://localhost:3003/sessions"
+    );
+    const repositoriesproData = await fetchAndMapData<Repositorypro>(
+      "http://localhost:3003/repositoriespro"
+    );
+    const sessionsproData = await fetchAndMapData<Sessionspro>(
+      "http://localhost:3003/sessionspro"
+    );
+    const repositoriesbearData = await fetchAndMapData<Repositorybear>(
+      "http://localhost:3003/repositoriesbear"
+    );
+    const sessionsbearData = await fetchAndMapData<Sessionsbear>(
+      "http://localhost:3003/sessionsbear"
     );
 
-    const sessionspro: Sessionspro[] = sessionsproData.map((data: any) => ({
-      id: data.id,
-      name: data.name,
-      endTime: data.endTime,
-      resultResult: data.resultResult,
-      resultMessage: data.resultMessage,
-    }));
-
-    return [repositories, sessions, repositoriespro, sessionspro];
+    return [
+      repositoriesData,
+      sessionsData,
+      repositoriesproData,
+      sessionsproData,
+      repositoriesbearData,
+      sessionsbearData,
+    ];
   } catch (error) {
     console.error("Error fetching data:", error);
-    return [[], [], [], []];
+    return [[], [], [], [], [], []];
   }
 };
-
-export default fetchData;

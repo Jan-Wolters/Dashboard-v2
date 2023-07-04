@@ -10,6 +10,8 @@ interface ListItemProps {
   formattedSessions: Sessions[];
   repositoriespro: Repository[];
   sessionspro: Sessions[];
+  repositoriesbear: Repository[];
+  sessionsbear: Sessions[];
 }
 
 interface Repository {
@@ -37,6 +39,8 @@ function ListItem({
   formattedSessions,
   repositoriespro,
   sessionspro,
+  repositoriesbear,
+  sessionsbear,
 }: ListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -44,13 +48,17 @@ function ListItem({
     setIsExpanded(!isExpanded);
   };
 
-  const shouldDisplaySessions = item === "heering" || item === "Profile Laser";
-  const shouldDisplayRepositories =
-    item === "heering" || item === "Profile Laser";
+  const shouldDisplaySessions = [
+    "heering",
+    "Profile Laser",
+    "Bear Optima Wood",
+  ].includes(item);
+
+  const shouldDisplayRepositories = shouldDisplaySessions;
 
   return (
     <li>
-      <div className="">
+      <div>
         <div
           className={`border border-dark text-center py-3 mt-2 position-relative d-flex align-items-center`}
           onClick={handleClick}
@@ -61,9 +69,11 @@ function ListItem({
               <StatusIcon
                 resultMessage={
                   (item === "heering"
-                    ? formattedSessions[0].resultResult
+                    ? formattedSessions[0]?.resultResult
                     : item === "Profile Laser"
-                    ? sessionspro[0].resultResult
+                    ? sessionspro[0]?.resultResult
+                    : item === "Bear Optima Wood"
+                    ? sessionsbear[0]?.resultResult
                     : "") || statusN
                 }
               />
@@ -75,9 +85,11 @@ function ListItem({
               <StatusIcon
                 resultMessage={
                   (item === "heering"
-                    ? formattedSessions[0].resultResult
+                    ? formattedSessions[0]?.resultResult
                     : item === "Profile Laser"
-                    ? sessionspro[0].resultResult
+                    ? sessionspro[0]?.resultResult
+                    : item === "Bear Optima Wood"
+                    ? sessionsbear[0]?.resultResult
                     : "") || statusN
                 }
               />
@@ -92,44 +104,47 @@ function ListItem({
             {shouldDisplaySessions && (
               <div className="border border-dark mt-2 mx-auto">
                 <div>
-                  <h1>{item === "heering" ? "Sessions" : "Sessions"}</h1>
+                  <h1>Sessions</h1>
                 </div>
                 <ul
                   className="list-group"
                   style={{ overflowY: "auto", maxHeight: "750px" }}
                 >
-                  {(item === "heering" ? formattedSessions : sessionspro).map(
-                    (session) => {
-                      const endTimeString = session?.endTime?.toLocaleString();
+                  {(item === "heering"
+                    ? formattedSessions
+                    : item === "Profile Laser"
+                    ? sessionspro
+                    : item === "Bear Optima Wood"
+                    ? sessionsbear
+                    : []
+                  ).map((session) => {
+                    const endTimeString = session?.endTime?.toLocaleString();
 
-                      return (
-                        <li
-                          className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
-                          key={session.id}
-                        >
-                          <div className="d-flex flex-fill">
-                            <span className="w-25 py-2 mx-1 fw-bold">
-                              {session.name}
-                            </span>
-                            <div className="flex-fill py-2 mx-1">
-                              <StatusIcon
-                                resultMessage={session.resultResult}
-                              />
-                            </div>
-                            <div
-                              className="flex-fill py-2 mx-4 border border-danger"
-                              style={{ maxWidth: "300px" }}
-                            >
-                              {session.resultMessage}
-                            </div>
-                            <div style={{ width: "300px" }}>
-                              <div className="py-2 mx-1 ">{endTimeString}</div>
-                            </div>
+                    return (
+                      <li
+                        className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
+                        key={session.id}
+                      >
+                        <div className="d-flex flex-fill">
+                          <span className="w-25 py-2 mx-1 fw-bold">
+                            {session.name}
+                          </span>
+                          <div className="flex-fill py-2 mx-1">
+                            <StatusIcon resultMessage={session.resultResult} />
                           </div>
-                        </li>
-                      );
-                    }
-                  )}
+                          <div
+                            className="flex-fill py-2 mx-4 border border-danger"
+                            style={{ maxWidth: "300px" }}
+                          >
+                            {session.resultMessage}
+                          </div>
+                          <div style={{ width: "300px" }}>
+                            <div className="py-2 mx-1 ">{endTimeString}</div>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
@@ -137,19 +152,15 @@ function ListItem({
             {shouldDisplayRepositories && (
               <div className="border border-dark mt-2">
                 <div>
-                  <h1>
-                    {item === "heering"
-                      ? "Repositories"
-                      : item === "Profile Laser"
-                      ? "Repositories"
-                      : ""}
-                  </h1>
+                  <h1>Repositories</h1>
                 </div>
                 <ul className="list-group">
                   {(item === "heering"
                     ? repositories
                     : item === "Profile Laser"
                     ? repositoriespro
+                    : item === "Bear Optima Wood"
+                    ? repositoriesbear
                     : []
                   ).map((repository) => {
                     const progressValue = parseFloat(

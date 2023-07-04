@@ -3,17 +3,13 @@ const fetch = (...args) =>
 import { createConnection } from "mysql2/promise";
 
 const port = 9419;
-const baseUrl = "https://192.168.28.22";
+const baseUrl = "https://fw-profilelaser.spdns.org";
 const tokenUrl = `${baseUrl}:${port}/api/oauth2/token`;
 const sessionApiUrl = `${baseUrl}:${port}/api/v1/sessions?limit=3`;
 const repositoryApiUrl = `${baseUrl}:${port}/api/v1/backupInfrastructure/repositories/states`;
-const username = "restapi";
-const password = '-$$k9OKe2bOlC?$0"fBZ';
-/*
 
 const username = "restapi";
 const password = "UDVuaDUoPUO2dyLfVHof";
-*/
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0; // Disable certificate verification
 
@@ -70,7 +66,7 @@ class AccessTokenManager {
 (async () => {
   try {
     const accessTokenManager = new AccessTokenManager(
-      "192.168.28.22",
+      "fw-profilelaser.spdns.org", //verander naar api url zonder https
       9419,
       username,
       password
@@ -113,9 +109,6 @@ class AccessTokenManager {
         database: "hallotest",
       });
 
-      const deleteSql = `DELETE FROM sessions`;
-      await connection.query(deleteSql); // Clear existing session data
-
       // Example: Insert data into a MySQL database
       const insertData = async (record) => {
         const sql = `INSERT INTO sessions (id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
@@ -143,7 +136,7 @@ class AccessTokenManager {
 
       for (const record of data.data) {
         await insertData(record);
-        console.log("Inserted session record:", record);
+        console.log("Inserted sessionpro record:", record);
       }
 
       await connection.end();
@@ -200,7 +193,7 @@ class AccessTokenManager {
 
       for (const record of data.data) {
         await insertData(record);
-        console.log("Inserted repository record:", record);
+        console.log("Inserted repositorypro record:", record);
       }
 
       await connection.end();
