@@ -247,7 +247,7 @@ class ApiManager {
       }
 
       await connection.end();
-      setTimeout(() => this.insertSessions(), 5 * 1000);
+      setTimeout(() => this.insertSessions(), 15 * 1000);
     } catch (error) {
       console.error(error);
       console.log("Failed");

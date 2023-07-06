@@ -1,23 +1,31 @@
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 function NavBar() {
   return (
-    <nav className="navbar border border-dark shadow-sm  mb-2 bg-white rounded">
-      <div className=" d-flex justify-content-between align-items-center w-100 my-2 ">
-        <div className=" border-1 w-25">
-          <h1 className="logo">logo</h1>
+    <nav className="navbar border border-dark shadow-sm mb-2 bg-white rounded">
+      <div className="d-flex justify-content-between align-items-center w-100 my-2">
+        <div className="border-1 w-25">
+          <h1 className="logo">Logo</h1>
         </div>
 
-        <div className="coll d-flex justify-content-end  w-50">
-          <h5 className="me-4  fw-bold f-20">voeg bedrijf toe</h5>
-          <h5 className="me-4  fw-bold f-20">voeg bedrijf toe</h5>
-          <h5 className="me-4  fw-bold f-20">voeg bedrijf toe</h5>
-          <h5 className="me-4  fw-bold f-20">voeg bedrijf toe</h5>
+        <div className="d-flex justify-content-center mx-auto">
+          <div className="border border-danger d-flex">
+            <div className="nav-item me-4">
+              <Link to="/" className="nav-link">
+                Home
+              </Link>
+            </div>
+            <div className="nav-item me-4">
+              <Link to="/company" className="nav-link">
+                Add
+              </Link>
+            </div>
+          </div>
         </div>
+
         <div className="dropdown bg-dark px-2 py-2 mx-1">
           <a
             className="dropdown-toggle hidden-arrow"
@@ -45,7 +53,6 @@ function NavBar() {
             className="dropdown-menu dropdown-menu-end"
             aria-labelledby="dropdownMenuIcon"
           >
-            <li></li>
             <li>
               <a className="dropdown-item" href="#">
                 <i className="fas fa-user-alt pe-2"></i>My Profile

@@ -29,6 +29,7 @@ export interface Sessionspro {
   resultResult: string;
   resultMessage: string;
 }
+
 export interface Repositorybear {
   name: string;
   id: number;
@@ -45,6 +46,17 @@ export interface Sessionsbear {
   resultMessage: string;
 }
 
+const fetchEndpoint = async (endpoint: string) => {
+  const response = await fetch(endpoint);
+  const jsonData = await response.json();
+  return jsonData;
+};
+
+const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
+  const data = await fetchEndpoint(endpoint);
+  return data.map((item: any) => item);
+};
+
 export const fetchData = async (): Promise<
   [
     Repository[],
@@ -56,17 +68,6 @@ export const fetchData = async (): Promise<
   ]
 > => {
   try {
-    const fetchEndpoint = async (endpoint: string) => {
-      const response = await fetch(endpoint);
-      const jsonData = await response.json();
-      return jsonData;
-    };
-
-    const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
-      const data = await fetchEndpoint(endpoint);
-      return data.map((item: any) => item);
-    };
-
     const repositoriesData = await fetchAndMapData<Repository>(
       "http://localhost:3003/repositories"
     );
@@ -97,5 +98,25 @@ export const fetchData = async (): Promise<
   } catch (error) {
     console.error("Error fetching data:", error);
     return [[], [], [], [], [], []];
+  }
+};
+
+export const saveCompany = async (companyData: any) => {
+  try {
+    const response = await fetch("http://localhost:3003/company", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(companyData),
+    });
+
+    if (response.ok) {
+      console.log("Company saved successfully");
+    } else {
+      console.error("Failed to save company");
+    }
+  } catch (error) {
+    console.error("Error saving company:", error);
   }
 };

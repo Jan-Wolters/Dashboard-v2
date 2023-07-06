@@ -96,7 +96,7 @@ function ListItem({
             )}
             {!shouldDisplaySessions && <StatusIcon resultMessage={statusN} />}
           </div>
-          <div className="flex-fill">{LastBackUp}</div>
+          <div className="flex-fill py-2 mx-1">{LastBackUp}</div>
         </div>
 
         {isExpanded && (
@@ -171,7 +171,7 @@ function ListItem({
                     );
 
                     const progressColor =
-                      progressValue >= 90
+                      progressValue >= 95
                         ? "bg-danger"
                         : progressValue >= 75
                         ? "bg-warning"
