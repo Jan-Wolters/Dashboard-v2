@@ -226,7 +226,7 @@ function saveCompany(req, res) {
   const query = `INSERT INTO companies (name, ip, port, veaamUsername, veaamPassword) VALUES (?, ?, ?, ?, ?)`;
   const values = [name, ip, port, veaamUsername, veaamPassword];
 
-  databaseManager.query(query, values, (error, results) => {
+  databaseManager.query(query, values, (error) => {
     if (error) {
       console.error("Error executing INSERT query:", error);
       return res

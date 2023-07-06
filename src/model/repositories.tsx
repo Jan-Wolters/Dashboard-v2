@@ -47,9 +47,14 @@ export interface Sessionsbear {
 }
 
 const fetchEndpoint = async (endpoint: string) => {
-  const response = await fetch(endpoint);
-  const jsonData = await response.json();
-  return jsonData;
+  try {
+    const response = await fetch(endpoint);
+    const jsonData = await response.json();
+    return jsonData;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return [];
+  }
 };
 
 const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
@@ -101,7 +106,7 @@ export const fetchData = async (): Promise<
   }
 };
 
-export const saveCompany = async (companyData: any) => {
+export const saveCompany = async (companyData: any): Promise<Response> => {
   try {
     const response = await fetch("http://localhost:3003/company", {
       method: "POST",
@@ -113,10 +118,14 @@ export const saveCompany = async (companyData: any) => {
 
     if (response.ok) {
       console.log("Company saved successfully");
+      return response;
     } else {
-      console.error("Failed to save company");
+      const errorData = await response.json();
+      const error = new Error(errorData.error || "Failed to save company");
+      throw error;
     }
   } catch (error) {
     console.error("Error saving company:", error);
+    throw error;
   }
 };
