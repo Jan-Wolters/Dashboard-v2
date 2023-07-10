@@ -10,39 +10,48 @@ export interface Company {
   repository_capacityGB: number;
   repository_freeGB: number;
   repository_usedSpaceGB: number;
+  session_id: string;
+  session_name: string;
+  session_endTime: string;
+  session_resultResult: string;
+  session_resultMessage: string;
 }
+
 const fetchEndpoint = async (endpoint: string) => {
   try {
     const response = await fetch(endpoint);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch data");
+    }
+
     const jsonData = await response.json();
     return jsonData;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
+  const data = await fetchEndpoint(endpoint);
+  return data.map((item: T) => item);
+};
+export const fetchData = async (companyId: number): Promise<Company[]> => {
+  try {
+    const endpoint = `http://localhost:3003/info`;
+    const companyData = await fetchAndMapData<Company>(endpoint);
+    return companyData;
   } catch (error) {
     console.error("Error fetching data:", error);
     return [];
   }
 };
 
-const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
-  const data = await fetchEndpoint(endpoint);
-  return data.map((item: any) => item);
-};
-
-export const fetchData = async (): Promise<[Company[]]> => {
+export const saveCompany = async (
+  companyData: Partial<Company>
+): Promise<Response> => {
   try {
-    const companydata = await fetchAndMapData<Company>(
-      "http://localhost:3003/info"
-    );
-
-    return [companydata];
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    return [[]];
-  }
-};
-
-export const saveCompany = async (companyData: any): Promise<Response> => {
-  try {
-    const response = await fetch("http://localhost:3003/company", {
+    const response = await fetch("http://localhost:3003/companies", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,14 +59,12 @@ export const saveCompany = async (companyData: any): Promise<Response> => {
       body: JSON.stringify(companyData),
     });
 
-    if (response.ok) {
-      console.log("Company saved successfully");
-      return response;
-    } else {
-      const errorData = await response.json();
-      const error = new Error(errorData.error || "Failed to save company");
-      throw error;
+    if (!response.ok) {
+      throw new Error("Failed to save company");
     }
+
+    console.log("Company saved successfully");
+    return response;
   } catch (error) {
     console.error("Error saving company:", error);
     throw error;

@@ -1,39 +1,45 @@
 import React from "react";
 
 interface StatusMessageProps {
-  sessions: Sessions[];
+  sessions: Company[];
 }
 
-interface Sessions {
-  id: number;
-  name: string;
-  endTime: Date;
-  resultResult: string;
-  resultMessage: string;
+interface Company {
+  session_id: number;
+  session_name: string;
+  session_endTime: string;
+  session_resultResult: string;
+  session_resultMessage: string;
 }
 
 const StatusMessage: React.FC<StatusMessageProps> = ({ sessions }) => {
   const warningSessions = sessions.filter((session) =>
-    session.resultResult.includes("Warning")
+    session.session_resultResult.includes("Warning")
   );
   const failedSessions = sessions.filter((session) =>
-    session.resultResult.includes("Failed")
+    session.session_resultResult.includes("Failed")
   );
 
   const successSessions = sessions.filter(
     (session) =>
-      !session.resultResult.includes("Warning") &&
-      !session.resultResult.includes("Failed")
+      !session.session_resultResult.includes("Warning") &&
+      !session.session_resultResult.includes("Failed")
   );
 
-  const getGroupedMessage = (groupSessions: Sessions[]) => {
+  const getGroupedMessage = (groupSessions: Company[]) => {
     return groupSessions.map((session) => (
-      <div key={session.id}>
+      <div key={session.session_id}>
         <p>
           <div className="">
-            <span className="w-25 py-2 mx-1 fw-bold">{session.name}</span>
-            <span className="flex-fill py-2 mx-1">{session.resultMessage}</span>
-            <span className="flex-fill py-2 mx-1">{session.endTime}</span>
+            <span className="w-25 py-2 mx-1 fw-bold">
+              {session.session_name}
+            </span>
+            <span className="flex-fill py-2 mx-1">
+              {session.session_resultMessage}
+            </span>
+            <span className="flex-fill py-2 mx-1">
+              {session.session_endTime}
+            </span>
           </div>
         </p>
       </div>

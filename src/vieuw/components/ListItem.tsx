@@ -2,59 +2,39 @@ import React, { useState } from "react";
 import StatusIcon from "./StatusIcon";
 
 interface ListItemProps {
-  item: string;
-  statusB: string;
-  statusN: string;
-  LastBackUp: string;
-  repositories: Repository[];
-  formattedSessions: Sessions[];
-  repositoriespro: Repository[];
-  sessionspro: Sessions[];
-  repositoriesbear: Repository[];
-  sessionsbear: Sessions[];
-}
-
-interface Repository {
-  name: string;
-  id: number;
-  capacityGB: number;
-  freeGB: number;
-  usedSpaceGB: number;
-}
-
-interface Sessions {
-  id: number;
-  name: string;
-  endTime: Date;
-  resultResult: string;
-  resultMessage: string;
+  company_id: number;
+  company_name: string;
+  repositories: {
+    repository_id: number;
+    repository_name: string;
+    repository_description: string;
+    repository_hostId: number;
+    repository_hostName: string;
+    repository_path: string;
+    repository_capacityGB: number;
+    repository_freeGB: number;
+    repository_usedSpaceGB: number;
+  }[];
+  sessions: {
+    session_id: string;
+    session_name: string;
+    session_endTime: string;
+    session_resultResult: string;
+    session_resultMessage: string;
+  }[];
 }
 
 function ListItem({
-  item,
-  statusB,
-  statusN,
-  LastBackUp,
+  company_id,
+  company_name,
   repositories,
-  formattedSessions,
-  repositoriespro,
-  sessionspro,
-  repositoriesbear,
-  sessionsbear,
+  sessions,
 }: ListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleClick = () => {
     setIsExpanded(!isExpanded);
   };
-
-  const shouldDisplaySessions = [
-    "heering",
-    "Profile Laser",
-    "Bear Optima Wood",
-  ].includes(item);
-
-  const shouldDisplayRepositories = shouldDisplaySessions;
 
   return (
     <li>
@@ -63,150 +43,104 @@ function ListItem({
           className={`border border-dark text-center py-3 mt-2 position-relative d-flex align-items-center`}
           onClick={handleClick}
         >
-          <span className="w-25 py-2 mx-1">{item}</span>
+          <span className="w-25 py-2 mx-1">{company_name}</span>
           <div className="flex-fill py-2 mx-1">
-            {shouldDisplaySessions && (
-              <StatusIcon
-                resultMessage={
-                  (item === "heering"
-                    ? formattedSessions[0]?.resultResult
-                    : item === "Profile Laser"
-                    ? sessionspro[0]?.resultResult
-                    : item === "Bear Optima Wood"
-                    ? sessionsbear[0]?.resultResult
-                    : "") || statusN
-                }
-              />
-            )}
-            {!shouldDisplaySessions && <StatusIcon resultMessage={statusB} />}
+            <StatusIcon resultMessage={sessions[0]?.session_resultResult} />
           </div>
           <div className="flex-fill py-2 mx-1">
-            {shouldDisplaySessions && (
-              <StatusIcon
-                resultMessage={
-                  (item === "heering"
-                    ? formattedSessions[0]?.resultResult
-                    : item === "Profile Laser"
-                    ? sessionspro[0]?.resultResult
-                    : item === "Bear Optima Wood"
-                    ? sessionsbear[0]?.resultResult
-                    : "") || statusN
-                }
-              />
-            )}
-            {!shouldDisplaySessions && <StatusIcon resultMessage={statusN} />}
+            <StatusIcon resultMessage={sessions[0]?.session_resultResult} />
           </div>
-          <div className="flex-fill py-2 mx-1">{LastBackUp}</div>
+          <div className="flex-fill py-2 mx-1">
+            {sessions[0]?.session_endTime}
+          </div>
         </div>
 
         {isExpanded && (
           <div className="mx-auto" style={{ maxWidth: "95%" }}>
-            {shouldDisplaySessions && (
-              <div className="border border-dark mt-2 mx-auto">
-                <div>
-                  <h1>Sessions</h1>
-                </div>
-                <ul
-                  className="list-group"
-                  style={{ overflowY: "auto", maxHeight: "750px" }}
-                >
-                  {(item === "heering"
-                    ? formattedSessions
-                    : item === "Profile Laser"
-                    ? sessionspro
-                    : item === "Bear Optima Wood"
-                    ? sessionsbear
-                    : []
-                  ).map((session) => {
-                    const endTimeString = session?.endTime?.toLocaleString();
-
-                    return (
-                      <li
-                        className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
-                        key={session.id}
+            <div className="border border-dark mt-2 mx-auto">
+              <div>
+                <h1>Sessions</h1>
+              </div>
+              <ul
+                className="list-group"
+                style={{ overflowY: "auto", maxHeight: "750px" }}
+              >
+                {sessions.map((session) => (
+                  <li
+                    className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
+                    key={session.session_id}
+                  >
+                    <div className="d-flex flex-fill">
+                      <span className="w-25 py-2 mx-1 fw-bold">
+                        {session.session_name}
+                      </span>
+                      <div className="flex-fill py-2 mx-1">
+                        <StatusIcon
+                          resultMessage={session.session_resultResult}
+                        />
+                      </div>
+                      <div
+                        className="flex-fill py-2 mx-4 border border-danger"
+                        style={{ maxWidth: "300px" }}
                       >
-                        <div className="d-flex flex-fill">
-                          <span className="w-25 py-2 mx-1 fw-bold">
-                            {session.name}
-                          </span>
-                          <div className="flex-fill py-2 mx-1">
-                            <StatusIcon resultMessage={session.resultResult} />
-                          </div>
+                        {session.session_resultMessage}
+                      </div>
+                      <div style={{ width: "300px" }}>
+                        <div className="py-2 mx-1 ">
+                          {session.session_endTime}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="border border-dark mt-2">
+              <div>
+                <h1>Repositories</h1>
+              </div>
+              <ul className="list-group">
+                {repositories.map((repository) => (
+                  <li
+                    className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
+                    key={repository.repository_id}
+                  >
+                    <div className="d-flex flex-fill">
+                      <span className="w-25 py-2 mx-1 fw-bold">
+                        {repository.repository_name}
+                      </span>
+                      <div className="flex-fill py-2 mx-1">
+                        <div className="progress">
                           <div
-                            className="flex-fill py-2 mx-4 border border-danger"
-                            style={{ maxWidth: "300px" }}
+                            className={`progress-bar ${
+                              repository.repository_usedSpaceGB >= 95
+                                ? "bg-danger"
+                                : repository.repository_usedSpaceGB >= 75
+                                ? "bg-warning"
+                                : ""
+                            }`}
+                            role="progressbar"
+                            aria-valuenow={repository.repository_usedSpaceGB}
+                            aria-valuemin={0}
+                            aria-valuemax={repository.repository_capacityGB}
+                            style={{
+                              width: `${
+                                (repository.repository_usedSpaceGB /
+                                  repository.repository_capacityGB) *
+                                100
+                              }%`,
+                            }}
                           >
-                            {session.resultMessage}
-                          </div>
-                          <div style={{ width: "300px" }}>
-                            <div className="py-2 mx-1 ">{endTimeString}</div>
+                            {repository.repository_usedSpaceGB}%
                           </div>
                         </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-            {shouldDisplayRepositories && (
-              <div className="border border-dark mt-2">
-                <div>
-                  <h1>Repositories</h1>
-                </div>
-                <ul className="list-group">
-                  {(item === "heering"
-                    ? repositories
-                    : item === "Profile Laser"
-                    ? repositoriespro
-                    : item === "Bear Optima Wood"
-                    ? repositoriesbear
-                    : []
-                  ).map((repository) => {
-                    const progressValue = parseFloat(
-                      (
-                        (repository.usedSpaceGB / repository.capacityGB) *
-                        100
-                      ).toFixed(2)
-                    );
-
-                    const progressColor =
-                      progressValue >= 95
-                        ? "bg-danger"
-                        : progressValue >= 75
-                        ? "bg-warning"
-                        : "";
-
-                    return (
-                      <li
-                        className={`text-center py-3 mt-2 position-relative d-flex align-items-center list-group-item`}
-                        key={repository.id}
-                      >
-                        <div className="d-flex flex-fill">
-                          <span className="w-25 py-2 mx-1 fw-bold">
-                            {repository.name}
-                          </span>
-                          <div className="flex-fill py-2 mx-1">
-                            <div className="progress">
-                              <div
-                                className={`progress-bar ${progressColor}`}
-                                role="progressbar"
-                                aria-valuenow={progressValue}
-                                aria-valuemin={0}
-                                aria-valuemax={100}
-                                style={{ width: `${progressValue}%` }}
-                              >
-                                {progressValue}%
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
       </div>

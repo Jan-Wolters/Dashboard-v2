@@ -1,74 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { ListItem } from "./components/ListItem";
-import {
-  Repository,
-  Sessions,
-  Repositorypro,
-  Sessionspro,
-  Repositorybear,
-  Sessionsbear,
-  fetchData,
-} from "../model/repositories.tsx";
-import StatusMessage from "./components/Message.tsx";
+import { fetchData, saveCompany, Company } from "../model/repositories";
 
 function ListGroup() {
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [sessions, setSessions] = useState<Sessions[]>([]);
-  const [repositoriespro, setRepositoriespro] = useState<Repositorypro[]>([]);
-  const [sessionspro, setSessionspro] = useState<Sessionspro[]>([]);
-  const [repositoriesbear, setRepositoriesbear] = useState<Repositorybear[]>(
-    []
-  );
-  const [sessionsbear, setSessionsbear] = useState<Sessionsbear[]>([]);
+  const [companies, setCompanies] = useState([] as Company[]);
 
   useEffect(() => {
     const fetchDataAsync = async () => {
-      const [
-        fetchedRepositories,
-        fetchedSessions,
-        fetchedRepositoriespro,
-        fetchedSessionspro,
-        fetchedRepositoriesbear,
-        fetchedSessionsbear,
-      ] = await fetchData();
-      setRepositories(fetchedRepositories);
-      setSessions(fetchedSessions);
-      setRepositoriespro(fetchedRepositoriespro);
-      setSessionspro(fetchedSessionspro);
-      setRepositoriesbear(fetchedRepositoriesbear);
-      setSessionsbear(fetchedSessionsbear);
+      try {
+        const fetchedCompanies = await fetchData();
+        setCompanies(fetchedCompanies);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
     fetchDataAsync();
   }, []);
 
-  const initialBedrijf = [
-    {
-      name: "heering",
-      LastBackUp: "16-05-2023",
-    },
-    {
-      name: "Profile Laser",
-      LastBackUp: "16-05-2023",
-    },
-    {
-      name: "Bear Optima Wood",
-      LastBackUp: "16-05-2023",
-    },
-    {
-      name: "Bear Optima Wood",
-      LastBackUp: "16-05-2023",
-    },
-  ];
+  const handleSaveCompany = async (companyData: any) => {
+    try {
+      await saveCompany(companyData);
+      const fetchedCompanies = await fetchData();
+      setCompanies(fetchedCompanies);
+    } catch (error) {
+      console.error("Error saving company:", error);
+    }
+  };
 
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
-      <div>
-        <StatusMessage
-          sessions={[...sessions, ...sessionspro, ...sessionsbear]}
-        />
-      </div>
-      <div id="head" className="border border-dark border border-3 mt-5">
+      <div id="head" className="border border-dark border-3 mt-5">
         <div className="text-center py-3 position-relative d-flex align-items-center">
           <div className="flex-fill  py-2 px-3 mx-1">
             <span className="fw-bold">bedrijfnaam</span>
@@ -82,30 +44,31 @@ function ListGroup() {
         </div>
       </div>
       <div id="List" className="d-fill">
-        {repositories.length === 0 ? (
+        {companies.length === 0 ? (
           <p className="text-center">Niks gevonden</p>
         ) : (
           <ul className="list-group">
-            {initialBedrijf.map((item) => {
-              const session = sessions.find(
-                (session) => session.name === item.name
-              );
-              const resultResult = session?.resultResult;
-
-              return (
-                <ListItem
-                  key={item.name}
-                  item={item.name}
-                  LastBackUp={item.LastBackUp}
-                  repositories={repositories}
-                  formattedSessions={sessions}
-                  repositoriespro={repositoriespro}
-                  sessionspro={sessionspro}
-                  repositoriesbear={repositoriesbear}
-                  sessionsbear={sessionsbear}
-                />
-              );
-            })}
+            {companies.map((company) => (
+              <ListItem
+                key={company.company_id}
+                company_id={company.company_id}
+                company_name={company.company_name}
+                repository_id={company.repository_id}
+                repository_name={company.repository_name}
+                repository_description={company.repository_description}
+                repository_hostId={company.repository_hostId}
+                repository_hostName={company.repository_hostName}
+                repository_path={company.repository_path}
+                repository_capacityGB={company.repository_capacityGB}
+                repository_freeGB={company.repository_freeGB}
+                repository_usedSpaceGB={company.repository_usedSpaceGB}
+                session_id={company.session_id}
+                session_name={company.session_name}
+                session_endTime={company.session_endTime}
+                session_resultResult={company.session_resultResult}
+                session_resultMessage={company.session_resultMessage}
+              />
+            ))}
           </ul>
         )}
       </div>
