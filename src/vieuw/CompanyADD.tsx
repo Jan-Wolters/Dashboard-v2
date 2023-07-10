@@ -1,8 +1,16 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import { saveCompany } from "../model/repositories.tsx";
+import axios from "axios";
+
+interface FormData {
+  name: string;
+  ip: string;
+  port: string;
+  veaamUsername: string;
+  veaamPassword: string;
+}
 
 function CompanyADD() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     ip: "",
     port: "",
@@ -38,21 +46,8 @@ function CompanyADD() {
     }
 
     try {
-      console.log("Submitting form data:", formData); // Debugging: Check form data before submission
-
-      await saveCompany(formData);
-      console.log("Company saved successfully");
-
-      setMessage("Company saved successfully");
-      console.log("Updated message value:", message);
-
-      window.location.reload(); // Reload the page
-    } catch (error) {
-      console.error("Error saving company:", error);
-      setMessage("Error occurred while saving company.");
-      console.log("Updated message value:", message);
-    } finally {
-      // Reset the form
+      console.log("Submitting form data:", formData);
+      setMessage("geslaagd.");
       setFormData({
         name: "",
         ip: "",
@@ -60,16 +55,48 @@ function CompanyADD() {
         veaamUsername: "",
         veaamPassword: "",
       });
+      await saveCompany(formData);
+      console.log("Company saved successfully");
 
-      console.log("Form reset:", formData); // Debugging: Check form data after resetting
+      setMessage("Company saved successfully");
+    } catch (error) {
+      console.error("Error saving company:", error);
+      setMessage("Error occurred while saving company.");
     }
   };
 
-  console.log("Rendering message:", message); // Debugging: Check message value before rendering
+  const saveCompany = async (formData: FormData) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3003/companies",
+        formData
+      );
+      console.log("Company saved successfully");
+      console.log("Response:", response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error saving company:", error);
+      throw error;
+    }
+  };
+  // console.log("Rendering message:", message);
 
   return (
     <div className="shadow-lg p-3 mb-5 bg-white rounded">
-      <div>{message}</div>
+      {message && (
+        <div
+          className={`alert ${
+            message.startsWith("Error") || message.startsWith("Please")
+              ? "alert-danger"
+              : "alert-success"
+          } text-center`}
+          role="alert"
+        >
+          {message}
+        </div>
+      )}
+
       <div className="border border-dark border-3 mt-5">
         <div className="text-center py-3 position-relative d-flex align-items-center">
           <div className="flex-fill py-2 px-3 mx-1">
@@ -77,9 +104,10 @@ function CompanyADD() {
           </div>
         </div>
       </div>
-      <div>
+      <div className="mt-2 border border-dark px-4 py-3 shadow-sm p-3  bg-white rounded">
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
+          <div className="form-group my-1 ">
+            <label>naam</label>
             <input
               className="form-control"
               type="text"
@@ -89,7 +117,8 @@ function CompanyADD() {
               onChange={handleChange}
             />
           </div>
-          <div className="mb-3">
+          <div className="form-group my-1 ">
+            <label>naam</label>
             <input
               className="form-control"
               type="text"
@@ -99,7 +128,8 @@ function CompanyADD() {
               onChange={handleChange}
             />
           </div>
-          <div className="mb-3">
+          <div className="form-group my-1 ">
+            <label>naam</label>
             <input
               className="form-control"
               type="text"
@@ -109,7 +139,8 @@ function CompanyADD() {
               onChange={handleChange}
             />
           </div>
-          <div className="mb-3">
+          <div className="form-group my-1 ">
+            <label>naam</label>
             <input
               className="form-control"
               type="text"
@@ -119,8 +150,8 @@ function CompanyADD() {
               onChange={handleChange}
             />
           </div>
-
-          <div className="mb-3">
+          <label>naam</label>
+          <div className="form-group my-1 ">
             <input
               className="form-control"
               type="text"
@@ -130,7 +161,7 @@ function CompanyADD() {
               onChange={handleChange}
             />
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary ">
             Save
           </button>
         </form>

@@ -1,12 +1,12 @@
 import express from "express";
 import mysql from "mysql2";
 import cors from "cors";
-import { spawn } from "child_process";
 
 const app = express();
 const port = 3003;
 
 app.use(cors());
+app.use(express.json());
 
 // Database configuration
 const dbConfig = {
@@ -52,172 +52,53 @@ app.listen(port, () => {
 });
 
 // Routes
-app.get("/repositories", getRepositories);
-app.get("/sessions", getSessions);
-app.get("/repositoriespro", getRepositoriesPro);
-app.get("/sessionspro", getSessionsPro);
-app.get("/repositoriesbear", getRepositoriesBear);
-app.get("/sessionsbear", getSessionsBear);
+app.get("/info", getInfo);
 
-function getRepositories(req, res) {
-  const query = "SELECT * FROM repositories WHERE name IN ('HE-NAs01','NASA3')";
+app.post("/companies", saveCompany);
 
-  databaseManager.query(query, (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching data." });
+async function getInfo(req, res) {
+  try {
+    const companiesQuery = "SELECT * FROM companies";
+    const [companiesRows] = await databaseManager.query(companiesQuery);
+
+    const repositoriesData = [];
+    for (const companiesRow of companiesRows) {
+      const companyId = companiesRow.company_id;
+
+      const repositoriesQuery = `
+        SELECT
+          companies.company_id AS company_id,
+          companies.name AS company_name,
+          repositories.id AS repository_id,
+          repositories.name AS repository_name,
+          repositories.description AS repository_description,
+          repositories.hostId AS repository_hostId,
+          repositories.hostName AS repository_hostName,
+          repositories.path AS repository_path,
+          repositories.capacityGB AS repository_capacityGB,
+          repositories.freeGB AS repository_freeGB,
+          repositories.usedSpaceGB AS repository_usedSpaceGB
+        FROM
+          companies
+        JOIN
+          repositories ON companies.company_id = repositories.company_id
+        WHERE
+          companies.company_id = ${companyId};
+      `;
+
+      const [repositoriesRows] = await databaseManager.query(repositoriesQuery);
+
+      for (const repositoriesRow of repositoriesRows) {
+        repositoriesData.push(repositoriesRow);
+      }
     }
 
-    console.log("Fetched data:", results);
-    if (results.length === 0) {
-      res.json({ message: "No data found." });
-    } else {
-      res.json(results);
-    }
-  });
+    res.json(repositoriesData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while fetching data." });
+  }
 }
-
-function getSessions(req, res) {
-  const query =
-    "SELECT * FROM sessions WHERE name = 'hyper-v backup' ORDER BY endTime DESC LIMIT 3";
-
-  databaseManager.query(query, (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching data." });
-    }
-
-    if (results.length === 0) {
-      res.json({ message: "No sessions found." });
-    } else {
-      const formattedResults = results.map((session) => ({
-        ...session,
-        name: session.name.toLowerCase(),
-        endTime: formatDateTime(session.endTime),
-      }));
-
-      console.log("Fetched sessions:", formattedResults);
-      res.json(formattedResults);
-    }
-  });
-}
-
-function getRepositoriesPro(req, res) {
-  const query =
-    "SELECT * FROM repositories WHERE name IN ('Profile Laser - NAS (Synology)', 'Synology NAS')";
-
-  databaseManager.query(query, (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching data." });
-    }
-
-    console.log("Fetched repositoriespro:", results);
-    if (results.length === 0) {
-      res.json({ message: "No data found." });
-    } else {
-      res.json(results);
-    }
-  });
-}
-
-function getSessionsPro(req, res) {
-  const query =
-    "SELECT * FROM sessions WHERE name = 'Backup HV01' ORDER BY endTime DESC LIMIT 3";
-
-  databaseManager.query(query, (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching data." });
-    }
-
-    if (results.length === 0) {
-      res.json({ message: "No sessionspro found." });
-    } else {
-      const formattedResults = results.map((session) => ({
-        ...session,
-        name: session.name.toLowerCase(),
-        endTime: formatDateTime(session.endTime),
-      }));
-
-      console.log("Fetched sessions:", formattedResults);
-      res.json(formattedResults);
-    }
-  });
-}
-
-function getRepositoriesBear(req, res) {
-  const query = "SELECT * FROM repositories WHERE name IN ('Bear-BACKUP')";
-
-  databaseManager.query(query, (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching bear." });
-    }
-
-    console.log("Fetched repositoriesbear:", results);
-    if (results.length === 0) {
-      res.json({ message: "No bear found." });
-    } else {
-      res.json(results);
-    }
-  });
-}
-
-function getSessionsBear(req, res) {
-  const query =
-    "SELECT * FROM sessions WHERE name = 'Back-up Bear-HV01' ORDER BY endTime DESC LIMIT 3";
-
-  databaseManager.query(query, (error, results) => {
-    if (error) {
-      console.error("Error executing SELECT query:", error);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching data." });
-    }
-
-    if (results.length === 0) {
-      res.json({ message: "No sessionsbear found." });
-    } else {
-      const formattedResults = results.map((session) => ({
-        ...session,
-        name: session.name.toLowerCase(),
-        endTime: formatDateTime(session.endTime),
-      }));
-
-      console.log("Fetched sessions:", formattedResults);
-      res.json(formattedResults);
-    }
-  });
-}
-
-function formatDateTime(dateTime) {
-  const date = new Date(dateTime);
-  const options = {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    timeZone: "Europe/Paris",
-  };
-
-  return date.toLocaleString("en-GB", options);
-}
-
-app.post("/company", saveCompany);
 
 function saveCompany(req, res) {
   const { name, ip, port, veaamUsername, veaamPassword } = req.body;
@@ -226,7 +107,7 @@ function saveCompany(req, res) {
   const query = `INSERT INTO companies (name, ip, port, veaamUsername, veaamPassword) VALUES (?, ?, ?, ?, ?)`;
   const values = [name, ip, port, veaamUsername, veaamPassword];
 
-  databaseManager.query(query, values, (error) => {
+  databaseManager.query(query, values, (error, results) => {
     if (error) {
       console.error("Error executing INSERT query:", error);
       return res
@@ -238,11 +119,3 @@ function saveCompany(req, res) {
     res.json({ message: "Company information saved successfully" });
   });
 }
-
-/*
-endpoints
-http://localhost:3000/repositories
-http://localhost:3000/backups
-http://localhost:3000/jobs
-
- */
