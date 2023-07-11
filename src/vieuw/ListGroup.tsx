@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { ListItem } from "./components/ListItem";
-import { fetchData, saveCompany, Company } from "../model/repositories";
+import {
+  fetchData,
+  saveCompany,
+  Company,
+  Session,
+  Repository,
+} from "../model/repositories";
+import StatusMessage from "./components/Message";
 
 function ListGroup() {
   const [companies, setCompanies] = useState([] as Company[]);
 
   useEffect(() => {
-    const fetchDataAsync = async () => {
+    const fetchCompanies = async () => {
       try {
         const fetchedCompanies = await fetchData();
         setCompanies(fetchedCompanies);
@@ -15,18 +22,8 @@ function ListGroup() {
       }
     };
 
-    fetchDataAsync();
+    fetchCompanies();
   }, []);
-
-  const handleSaveCompany = async (companyData: any) => {
-    try {
-      await saveCompany(companyData);
-      const fetchedCompanies = await fetchData();
-      setCompanies(fetchedCompanies);
-    } catch (error) {
-      console.error("Error saving company:", error);
-    }
-  };
 
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
@@ -53,20 +50,8 @@ function ListGroup() {
                 key={company.company_id}
                 company_id={company.company_id}
                 company_name={company.company_name}
-                repository_id={company.repository_id}
-                repository_name={company.repository_name}
-                repository_description={company.repository_description}
-                repository_hostId={company.repository_hostId}
-                repository_hostName={company.repository_hostName}
-                repository_path={company.repository_path}
-                repository_capacityGB={company.repository_capacityGB}
-                repository_freeGB={company.repository_freeGB}
-                repository_usedSpaceGB={company.repository_usedSpaceGB}
-                session_id={company.session_id}
-                session_name={company.session_name}
-                session_endTime={company.session_endTime}
-                session_resultResult={company.session_resultResult}
-                session_resultMessage={company.session_resultMessage}
+                repositories={company.repositories}
+                sessions={company.sessions}
               />
             ))}
           </ul>
@@ -77,3 +62,43 @@ function ListGroup() {
 }
 
 export default ListGroup;
+
+/* const query = `
+    SELECT
+      companies.company_id AS company_id,
+      companies.name AS company_name,
+      GROUP_CONCAT(DISTINCT repositories.id) AS repository_ids,
+      GROUP_CONCAT(DISTINCT repositories.name) AS repository_names,
+      GROUP_CONCAT(DISTINCT repositories.capacityGB) AS repository_capacities,
+      GROUP_CONCAT(DISTINCT repositories.freeGB) AS repository_frees,
+      GROUP_CONCAT(DISTINCT repositories.usedSpaceGB) AS repository_usedSpaces,
+      latest_session.session_name AS session_name,
+      latest_session.session_endTime AS session_endTime,
+      latest_session.session_resultResult AS session_resultResult,
+      latest_session.session_resultMessage AS session_resultMessage
+    FROM
+      companies
+    JOIN
+      repositories ON companies.company_id = repositories.company_id
+    LEFT JOIN (
+      SELECT
+        sessions.company_id,
+        sessions.name AS session_name,
+        sessions.endTime AS session_endTime,
+        sessions.resultResult AS session_resultResult,
+        sessions.resultMessage AS session_resultMessage
+      FROM
+        sessions
+      INNER JOIN (
+        SELECT
+          company_id,
+          MAX(endTime) AS max_endTime
+        FROM
+          sessions
+        GROUP BY
+          company_id
+      ) AS latest ON sessions.company_id = latest.company_id AND sessions.endTime = latest.max_endTime
+    ) AS latest_session ON companies.company_id = latest_session.company_id
+    GROUP BY
+      companies.company_id, companies.name, latest_session.session_name, latest_session.session_endTime, latest_session.session_resultResult, latest_session.session_resultMessage;`;
+ */

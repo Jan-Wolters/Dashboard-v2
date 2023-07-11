@@ -1,6 +1,4 @@
-export interface Company {
-  company_id: number;
-  company_name: string;
+export interface Repository {
   repository_id: number;
   repository_name: string;
   repository_description: string;
@@ -10,11 +8,21 @@ export interface Company {
   repository_capacityGB: number;
   repository_freeGB: number;
   repository_usedSpaceGB: number;
+}
+
+export interface Session {
   session_id: string;
   session_name: string;
   session_endTime: string;
   session_resultResult: string;
   session_resultMessage: string;
+}
+
+export interface Company {
+  company_id: number;
+  company_name: string;
+  repositories: Repository[];
+  sessions: Session[];
 }
 
 const fetchEndpoint = async (endpoint: string) => {
@@ -32,11 +40,13 @@ const fetchEndpoint = async (endpoint: string) => {
     throw error;
   }
 };
+
 const fetchAndMapData = async <T,>(endpoint: string): Promise<T[]> => {
   const data = await fetchEndpoint(endpoint);
   return data.map((item: T) => item);
 };
-export const fetchData = async (companyId: number): Promise<Company[]> => {
+
+export const fetchData = async (): Promise<Company[]> => {
   try {
     const endpoint = `http://localhost:3003/info`;
     const companyData = await fetchAndMapData<Company>(endpoint);
