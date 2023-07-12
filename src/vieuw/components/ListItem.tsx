@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import StatusIcon from "./StatusIcon";
 
 interface ListItemProps {
@@ -24,12 +24,7 @@ interface ListItemProps {
   }[];
 }
 
-function ListItem({
-  company_id,
-  company_name,
-  repositories,
-  sessions,
-}: ListItemProps) {
+function ListItem({ company_name, repositories, sessions }: ListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleClick = () => {
@@ -59,7 +54,7 @@ function ListItem({
             </div>
           </div>
           <div className="flex-fill py-2 mx-1"></div>
-          <div className="flex-fill py-2 mx-1"></div>
+          <div className="flex-fill py-2 mx-1"> </div>
         </div>
 
         {isExpanded && (

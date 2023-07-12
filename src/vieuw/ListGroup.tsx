@@ -1,13 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ListItem } from "./components/ListItem";
-import {
-  fetchData,
-  saveCompany,
-  Company,
-  Session,
-  Repository,
-} from "../model/repositories";
-import StatusMessage from "./components/Message";
+import { fetchData, Company } from "../model/repositories";
 
 function ListGroup() {
   const [companies, setCompanies] = useState([] as Company[]);
