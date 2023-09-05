@@ -63,43 +63,45 @@ async function getInfo(req, res) {
     const companyId = req.query.companyId;
 
     const companiesQuery = `
+    SELECT
+    companies.company_id AS company_id,
+    companies.name AS company_name,
+    GROUP_CONCAT(DISTINCT repositories.id) AS repository_ids,
+    GROUP_CONCAT(DISTINCT repositories.name) AS repository_names,
+    GROUP_CONCAT(repositories.capacityGB) AS repository_capacities,
+    GROUP_CONCAT(repositories.freeGB) AS repository_frees,
+    GROUP_CONCAT(repositories.usedSpaceGB) AS repository_usedSpaces,
+    latest_session.session_name AS session_name,
+    latest_session.session_endTime AS session_endTime,
+    latest_session.session_resultResult AS session_resultResult,
+    latest_session.session_resultMessage AS session_resultMessage
+  FROM
+    companies
+  JOIN
+    repositories ON companies.company_id = repositories.company_id
+  LEFT JOIN (
+    SELECT
+      sessions.company_id,
+      sessions.name AS session_name,
+      sessions.endTime AS session_endTime,
+      sessions.resultResult AS session_resultResult,
+      sessions.resultMessage AS session_resultMessage
+    FROM
+      sessions
+    INNER JOIN (
       SELECT
-        companies.company_id AS company_id,
-        companies.name AS company_name,
-        GROUP_CONCAT(DISTINCT repositories.id) AS repository_ids,
-        GROUP_CONCAT(DISTINCT repositories.name) AS repository_names,
-        GROUP_CONCAT( repositories.capacityGB) AS repository_capacities,
-        GROUP_CONCAT( repositories.freeGB) AS repository_frees,
-        GROUP_CONCAT( repositories.usedSpaceGB) AS repository_usedSpaces,
-        latest_session.session_name AS session_name,
-        latest_session.session_endTime AS session_endTime,
-        latest_session.session_resultResult AS session_resultResult,
-        latest_session.session_resultMessage AS session_resultMessage
+        company_id,
+        MAX(endTime) AS max_endTime
       FROM
-        companies
-      JOIN
-        repositories ON companies.company_id = repositories.company_id
-      LEFT JOIN (
-        SELECT
-          sessions.company_id,
-          sessions.name AS session_name,
-          sessions.endTime AS session_endTime,
-          sessions.resultResult AS session_resultResult,
-          sessions.resultMessage AS session_resultMessage
-        FROM
-          sessions
-        INNER JOIN (
-          SELECT
-            company_id,
-            MAX(endTime) AS max_endTime
-          FROM
-            sessions
-          GROUP BY
-            company_id
-        ) AS latest ON sessions.company_id = latest.company_id AND sessions.endTime = latest.max_endTime
-      ) AS latest_session ON companies.company_id = latest_session.company_id
+        sessions
       GROUP BY
-        companies.company_id, companies.name, latest_session.session_name, latest_session.session_endTime, latest_session.session_resultResult, latest_session.session_resultMessage;`;
+        company_id
+    ) AS latest ON sessions.company_id = latest.company_id AND sessions.endTime = latest.max_endTime
+  ) AS latest_session ON companies.company_id = latest_session.company_id
+  WHERE
+    companies.company_id IN (153, 154, 155) -- Specify the company IDs here
+  GROUP BY
+    companies.company_id, companies.name, latest_session.session_name, latest_session.session_endTime, latest_session.session_resultResult, latest_session.session_resultMessage;`;
 
     const companiesRows = await databaseManager.query(companiesQuery, [
       companyId,

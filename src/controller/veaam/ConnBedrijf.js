@@ -4,9 +4,9 @@ import { resolveObjectURL } from "buffer";
 import { createConnection } from "mysql2/promise";
 
 class ApiManager {
-  constructor(companyname, serverURL, port, username, password) {
-    this.companyname = this.companyname;
-    this.serverURL = serverURL;
+  constructor(companyname, ip, port, username, password) {
+    this.companyname = companyname;
+    this.ip = ip;
     this.port = port;
     this.username = username;
     this.password = password;
@@ -88,10 +88,6 @@ class ApiManager {
 
       // Establish a connection to the MySQL database
       const connection = await createConnection({
-        /* host: "10.0.11.196",
-        user: "root",
-        password: "Test@10!",
-        database: "new_schema" */
         host: "localhost",
         user: "root",
         password: "",
@@ -100,9 +96,10 @@ class ApiManager {
 
       // Insert data, values are in order same as API provides it back.
       const insertData = async (record) => {
-        const sql = `INSERT INTO repositories (type, id, name, description, hostId, hostName, path, capacityGB, freeGB, usedSpaceGB)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        const sql = `INSERT INTO repositories (company_id, type, id, name, description, hostId, hostName, path, capacityGB, freeGB, usedSpaceGB)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                      ON DUPLICATE KEY UPDATE
+                     company_id = VALUES(company_id),
                      type = VALUES(type),
                      name = VALUES(name),
                      description = VALUES(description),
@@ -113,6 +110,7 @@ class ApiManager {
                      freeGB = VALUES(freeGB),
                      usedSpaceGB = VALUES(usedSpaceGB)`;
         const values = [
+          record.company_id,
           record.type,
           record.id,
           record.name,
@@ -137,15 +135,17 @@ class ApiManager {
         return; // Exit the function
       }
 
-      // For each record, insert to database
+      // For each record, insert into the database
       for (const record of data.data) {
+        record.company_id = this.companyname; // Assign the company_id
+
         await insertData(record);
         console.log("Success in Repositories");
       }
 
       await connection.end();
 
-      setTimeout(() => this.insertRepositories(), 15 * 1000);
+      setTimeout(() => this.insertRepositories(), 1000);
     } catch (error) {
       console.error(error);
       console.log("Failed");
@@ -163,7 +163,7 @@ class ApiManager {
       };
 
       const response = await fetch(
-        `https://${this.serverURL}:${this.port}/api/v1/sessions?limit=5`,
+        `https://${this.ip}:${this.port}/api/v1/sessions?limit=5`,
         {
           headers: headers,
           agent: new (
@@ -180,10 +180,6 @@ class ApiManager {
 
       // Establish a connection to the MySQL database
       const connection = await createConnection({
-        /* host: "10.0.11.196",
-        user: "root",
-        password: "Test@10!",
-        database: "new_schema" */
         host: "localhost",
         user: "root",
         password: "",
@@ -193,24 +189,26 @@ class ApiManager {
       // Insert data, values are in order same as API provides it back.
       // Result is null till progressPercent is 100!
       const insertData = async (record) => {
-        const sql = `INSERT INTO sessions (id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-      name = VALUES(name),
-      activityId = VALUES(activityId),
-      sessionType = VALUES(sessionType),
-      creationTime = VALUES(creationTime),
-      endTime = VALUES(endTime),
-      state = VALUES(state),
-      progressPercent = VALUES(progressPercent),
-      resultResult = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultResult)),
-      resultMessage = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultMessage)),
-      resultIsCanceled = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultIsCanceled)),
-      resourceId = VALUES(resourceId),
-      resourceReference = VALUES(resourceReference),
-      parentSessionId = VALUES(parentSessionId),
-      usn = VALUES(usn)`;
+        const sql = `INSERT INTO sessions (company_id, id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+          company_id = VALUES(company_id),
+          name = VALUES(name),
+          activityId = VALUES(activityId),
+          sessionType = VALUES(sessionType),
+          creationTime = VALUES(creationTime),
+          endTime = VALUES(endTime),
+          state = VALUES(state),
+          progressPercent = VALUES(progressPercent),
+          resultResult = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultResult)),
+          resultMessage = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultMessage)),
+          resultIsCanceled = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultIsCanceled)),
+          resourceId = VALUES(resourceId),
+          resourceReference = VALUES(resourceReference),
+          parentSessionId = VALUES(parentSessionId),
+          usn = VALUES(usn)`;
         const values = [
+          record.company_id,
           record.id,
           record.name,
           record.activityId,
@@ -221,7 +219,7 @@ class ApiManager {
           record.progressPercent,
           record.progressPercent < 100 ? null : record.result.result,
           record.progressPercent < 100 ? null : record.result.message,
-          record.progressPercent < 100 ? null : record.result.isCanceled,
+          record.progressPercent < 100 ? null : record.result.isCanceled, // Closing parenthesis was missing here
           record.resourceId,
           record.resourceReference,
           record.parentSessionId,
@@ -240,8 +238,10 @@ class ApiManager {
         return; // Exit the function
       }
 
-      // For each record, insert to database
+      // For each record, insert into the database
       for (const record of data.data) {
+        record.company_id = this.companyname; // Assign the company_id
+
         await insertData(record);
         console.log("Success in ALL SESSIONS");
       }
@@ -254,36 +254,3 @@ class ApiManager {
     }
   }
 }
-
-const HeeringManager = new ApiManager(
-  "Heering",
-  "192.168.28.22",
-  9419,
-  "restapi",
-  '-$$k9OKe2bOlC?$0"fBZ'
-);
-
-HeeringManager.insertRepositories();
-HeeringManager.insertSessions();
-
-const ProlazerManager = new ApiManager(
-  "profilelazer",
-  "fw-profilelaser.spdns.org",
-  9419,
-  "restapi",
-  "UDVuaDUoPUO2dyLfVHof"
-);
-
-ProlazerManager.insertRepositories();
-ProlazerManager.insertSessions();
-
-const BearOptimarManager = new ApiManager(
-  "BearOptima",
-  "fw-bear.spdns.org",
-  9419,
-  "restapi",
-  "DbVUTs8c2KGPSyF5pVrw"
-);
-
-BearOptimarManager.insertRepositories();
-BearOptimarManager.insertSessions();
