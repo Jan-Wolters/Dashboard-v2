@@ -1,31 +1,28 @@
 import fetch from "node-fetch";
-import { createConnection, Connection } from "mysql2/promise";
+import { createConnection } from "mysql2/promise";
 
 // Add this line to disable SSL certificate validation
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 const mysqlConfig = {
+  /* host: "10.0.11.196",
+  user: "root",
+  password: "Test@10!",
+  database: "new_schema",
+  */
   host: "localhost",
   user: "root",
   password: "", // <-- Add your MySQL password here
   database: "hallotest",
 };
 
-interface ApiCredentials {
-  company_id: number;
-  ip: string;
-  port: number;
-  username: string;
-  password: string;
-}
-
 class AccessTokenManager {
-  private access_token: string | null = null;
-  private tokenExpiryTime: number | null = null;
+  constructor() {
+    this.access_token = null;
+    this.tokenExpiryTime = null;
+  }
 
-  constructor() {}
-
-  async fetchAccessToken(ip: string, port: number, veaamUsername: string, veaamPassword: string) {
+  async fetchAccessToken(ip, port, veaamUsername, veaamPassword) {
     try {
       const requestData = {
         grant_type: "password",
@@ -74,13 +71,13 @@ class AccessTokenManager {
   }
 
   async getAccessToken() {
-    if (!this.access_token || (this.tokenExpiryTime && this.tokenExpiryTime <= new Date().getTime())) {
+    if (!this.access_token || this.tokenExpiryTime <= new Date().getTime()) {
       throw new Error("Access token is not available or expired.");
     }
     return this.access_token;
   }
 
-  async getApiCredentialsFromDB(): Promise<ApiCredentials[]> {
+  async getApiCredentialsFromDB() {
     try {
       const connection = await createConnection(mysqlConfig);
 
@@ -96,11 +93,12 @@ class AccessTokenManager {
         return [];
       }
 
-      const apiCredentialsList: ApiCredentials[] = [];
+      const apiCredentialsList = [];
 
       for (const row of rows) {
-        const apiCredentials: ApiCredentials = {
+        const apiCredentials = {
           company_id: row.company_id,
+
           ip: row.ip,
           port: row.port,
           username: row.veaamUsername,
@@ -119,7 +117,7 @@ class AccessTokenManager {
     }
   }
 
-  async fetchDataFromApi(apiUrl: string, ignoreSSLValidation: boolean) {
+  async fetchDataFromApi(apiUrl, ignoreSSLValidation) {
     try {
       const accessToken = await this.getAccessToken(); // Get the access token
 
@@ -158,7 +156,7 @@ class AccessTokenManager {
     }
   }
 
-  async createSessionsTableIfNotExists(connection: Connection) {
+  async createSessionsTableIfNotExists(connection) {
     try {
       // Create a table for sessions if it doesn't exist (you can modify this SQL query based on your table structure)
       await connection.execute(`
@@ -188,7 +186,7 @@ class AccessTokenManager {
     }
   }
 
-  async createRepositoriesTableIfNotExists(connection: Connection) {
+  async createRepositoriesTableIfNotExists(connection) {
     try {
       // Create a table for repositories if it doesn't exist (you can modify this SQL query based on your table structure)
       await connection.execute(`
@@ -213,7 +211,7 @@ class AccessTokenManager {
     }
   }
 
-  async saveDataToDatabase(records: any[], company_id: number, tableName: string) {
+  async saveDataToDatabase(records, company_id, tableName) {
     try {
       const connection = await createConnection(mysqlConfig);
 
@@ -231,7 +229,7 @@ class AccessTokenManager {
         let values;
 
         if (tableName === "sessions") {
-          sql = `INSERT INTO sessions3 (id, company_id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
+          sql = `INSERT INTO sessions (id, company_id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
             name = VALUES(name),
@@ -268,8 +266,8 @@ class AccessTokenManager {
             record.usn,
           ];
         } else if (tableName === "repositories") {
-          sql = `INSERT INTO repositories3 (type, id, company_id, name, description, hostId, hostName, path, capacityGB, freeGB, usedSpaceGB)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          sql = `INSERT INTO repositories (type, id,company_id, name, description, hostId, hostName, path, capacityGB, freeGB, usedSpaceGB)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
             ON DUPLICATE KEY UPDATE
             type = VALUES(type),
             name = VALUES(name),
@@ -317,6 +315,8 @@ class AccessTokenManager {
       const apiCredentialsList = await this.getApiCredentialsFromDB();
 
       for (const apiCredentials of apiCredentialsList) {
+        console.log(`Processing Company ID: ${apiCredentials.company_id}`);
+
         await this.fetchAccessToken(
           apiCredentials.ip,
           apiCredentials.port,
@@ -328,36 +328,38 @@ class AccessTokenManager {
         const repositoriesApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}/api/v1/backupInfrastructure/repositories/states`;
 
         // Fetch data from the sessions API and log it to the console
+        console.log("Fetching sessions data...");
         const sessionsData = await this.fetchDataFromApi(sessionsApiUrl, true); // Pass true to ignore SSL certificate validation
 
         // Save the sessions data to the database along with the company_id
+        console.log("Saving sessions data...");
         await this.saveDataToDatabase(
           sessionsData,
           apiCredentials.company_id,
-          "sessions3"
+          "sessions"
         );
 
         // Fetch data from the repositories API and log it to the console
+        console.log("Fetching repositories data...");
         const repositoriesData = await this.fetchDataFromApi(
           repositoriesApiUrl,
           true
         ); // Pass true to ignore SSL certificate validation
 
         // Save the repositories data to the database
+        console.log("Saving repositories data...");
         await this.saveDataToDatabase(
           repositoriesData,
           apiCredentials.company_id,
-          "repositories3"
+          "repositories"
+        );
+
+        console.log(
+          `Processing Company ID ${apiCredentials.company_id} completed.`
         );
       }
 
       console.log("Success");
-      // Schedule the next execution after the specified interval
-      setTimeout(() => {
-        this.executeApiRequests();
-        console.log("New Info in");
-        // Time needs to change to 3 hours unless somebody clicks reload
-      }, 3 * 60 * 60 * 1000); // 3 hours in milliseconds
     } catch (error) {
       console.error("Error executing API requests:", error);
       console.log("Failed");
@@ -365,5 +367,9 @@ class AccessTokenManager {
   }
 }
 
-const accessTokenManager = new AccessTokenManager();
-accessTokenManager.executeApiRequests();
+(async () => {
+  const accessTokenManager = new AccessTokenManager();
+  console.log("Starting ApiCon.js...");
+  await accessTokenManager.executeApiRequests();
+  console.log("ApiCon.js execution completed.");
+})();

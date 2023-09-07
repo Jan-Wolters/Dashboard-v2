@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ListItem } from "./components/ListItem";
 import { fetchData, Company } from "../model/repositories";
 
@@ -18,36 +18,27 @@ function ListGroup() {
     fetchCompanies();
   }, []);
 
+  // Function to trigger the server restart
+
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
-      <div id="head" className="border border-dark border-3 mt-5">
-        <div className="text-center py-3 position-relative d-flex align-items-center">
-          <div className="flex-fill  py-2 px-3 mx-1">
-            <span className="fw-bold">bedrijfnaam</span>
-          </div>
-          <div className="flex-fill  py-2 mx-1">
-            <span className="fw-bold">Backup Status</span>
-          </div>
-          <div className="flex-fill  py-2 mx-1">
-            <span className="fw-bold">Last Backup</span>
-          </div>
-        </div>
-      </div>
       <div id="List" className="d-fill">
         {companies.length === 0 ? (
           <p className="text-center">Niks gevonden</p>
         ) : (
-          <ul className="list-group">
-            {companies.map((company) => (
-              <ListItem
-                key={company.company_id}
-                company_id={company.company_id}
-                company_name={company.company_name}
-                repositories={company.repositories}
-                sessions={company.sessions}
-              />
-            ))}
-          </ul>
+          <div>
+            <ul className="list-group">
+              {companies.map((company) => (
+                <ListItem
+                  key={company.company_id}
+                  company_id={company.company_id}
+                  company_name={company.company_name}
+                  repositories={company.repositories}
+                  sessions={company.sessions}
+                />
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </div>

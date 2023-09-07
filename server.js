@@ -1,19 +1,21 @@
+// Import necessary modules
 import { createConnection } from "mysql2/promise";
-import express from "express";
-import mysql from "mysql2";
+import express, { json } from "express";
+import { createPool } from "mysql2";
 import cors from "cors";
+import { exec } from "child_process"; // Import the 'child_process' module
 
 const app = express();
-const port = 3003;
+const port = 3004;
 
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 // Database configuration
 const dbConfig = {
   host: "localhost",
   user: "root",
-  password: "",
+  password: "", // Replace with your database password
   database: "hallotest",
   waitForConnections: true,
 };
@@ -23,7 +25,7 @@ class DatabaseManager {
   pool;
 
   constructor(config) {
-    this.pool = mysql.createPool(config);
+    this.pool = createPool(config);
     this.pool.getConnection((err, connection) => {
       if (err) {
         console.error("Error connecting to MySQL database:", err);
@@ -49,9 +51,24 @@ class DatabaseManager {
 
 const databaseManager = new DatabaseManager(dbConfig);
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+// Function Declarations
+function runScript() {
+  function onScriptExit(error, stdout, stderr) {
+    if (error) {
+      console.error(`Error executing script: ${error}`);
+    }
+    console.log(`Script output: ${stdout}`);
+    console.error(`Script error: ${stderr}`);
+
+    // Set the delay for the next run (6 seconds)
+    const delayInMilliseconds = 6000; // 6000 milliseconds = 6 seconds
+
+    // Call the runScript function again after the delay
+    setTimeout(runScript, delayInMilliseconds);
+  }
+
+  exec(`node ${scriptPath}`, onScriptExit);
+}
 
 // Routes
 app.get("/info", getInfo);
@@ -99,7 +116,7 @@ async function getInfo(req, res) {
     ) AS latest ON sessions.company_id = latest.company_id AND sessions.endTime = latest.max_endTime
   ) AS latest_session ON companies.company_id = latest_session.company_id
   WHERE
-    companies.company_id IN (153, 154, 155) -- Specify the company IDs here
+  companies.company_id = companies.company_id -- Specify the company IDs here
   GROUP BY
     companies.company_id, companies.name, latest_session.session_name, latest_session.session_endTime, latest_session.session_resultResult, latest_session.session_resultMessage;`;
 
@@ -184,3 +201,16 @@ function saveCompany(req, res) {
         .json({ error: "An error occurred while saving company information." });
     });
 }
+
+// Set script path and initial delay
+const scriptPath = "Dashboard/src/controller/veaam/ApiCon.js"; // Replace with the actual path
+const initialDelayInMilliseconds = 0.1 * 60 * 1000; // 6 seconds
+
+console.log("Starting ApiCon.js...");
+
+// Start the initial run
+setTimeout(runScript, initialDelayInMilliseconds);
+
+app.listen(port, () => {
+  console.log(`Server listening at http://localhost:${port}`);
+});
