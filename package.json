@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "npm-run-all --parallel start:vite start:server",
+    "start:vite": "vite",
+    "start:server": "node server.js"
   },
   "dependencies": {
     "@types/axios": "^0.14.0",
@@ -17,6 +20,7 @@
     "chart.js": "^4.3.0",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "exec": "^0.2.1",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
@@ -43,6 +47,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
     "esm": "^3.2.25",
+    "npm-run-all": "^4.1.5",
     "pm2": "^5.3.0",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"

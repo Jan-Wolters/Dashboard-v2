@@ -1,4 +1,5 @@
 // Import necessary modules
+
 import { createConnection } from "mysql2/promise";
 import express, { json } from "express";
 import { createPool } from "mysql2";
@@ -6,7 +7,7 @@ import cors from "cors";
 import { exec } from "child_process"; // Import the 'child_process' module
 
 const app = express();
-const port = 3004;
+const port = 3005;
 
 app.use(cors());
 app.use(json());
@@ -15,9 +16,8 @@ app.use(json());
 const dbConfig = {
   host: "localhost",
   user: "root",
-  password: "", // Replace with your database password
+  password: "", // <-- Add your MySQL password here
   database: "hallotest",
-  waitForConnections: true,
 };
 
 // Database manager
@@ -61,7 +61,7 @@ function runScript() {
     console.error(`Script error: ${stderr}`);
 
     // Set the delay for the next run (6 seconds)
-    const delayInMilliseconds = 6000; // 6000 milliseconds = 6 seconds
+    const delayInMilliseconds = 5 * 60 * 1000; // 6000 milliseconds = 6 seconds
 
     // Call the runScript function again after the delay
     setTimeout(runScript, delayInMilliseconds);
@@ -203,7 +203,7 @@ function saveCompany(req, res) {
 }
 
 // Set script path and initial delay
-const scriptPath = "Dashboard/src/controller/veaam/ApiCon.js"; // Replace with the actual path
+const scriptPath = "src/controller/veaam/ApiCon.js"; // Replace with the actual path
 const initialDelayInMilliseconds = 0.1 * 60 * 1000; // 6 seconds
 
 console.log("Starting ApiCon.js...");

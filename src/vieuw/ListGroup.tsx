@@ -47,7 +47,7 @@ function ListGroup() {
 
 export default ListGroup;
 
-/* const query = `
+/* const query = ` 
     SELECT
       companies.company_id AS company_id,
       companies.name AS company_name,
