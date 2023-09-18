@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ListItem } from "./components/ListItem";
-import { fetchData, Company } from "../model/repositories";
+import { ListItem } from "../components/ListItem";
+import { fetchData, Company } from "../../model/repositories.ts";
 
 function ListGroup() {
   const [companies, setCompanies] = useState([] as Company[]);
@@ -17,8 +17,6 @@ function ListGroup() {
 
     fetchCompanies();
   }, []);
-
-  // Function to trigger the server restart
 
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
