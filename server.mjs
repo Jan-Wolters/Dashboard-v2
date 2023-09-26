@@ -3,10 +3,11 @@ import { json } from "express";
 import { createPool } from "mysql2";
 import cors from "cors";
 import { exec } from "child_process";
-
+import session from "express-session";
 import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for client-side routing
 
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
@@ -76,8 +77,8 @@ function runScript() {
     scriptCount++;
     console.log(`Script count: ${scriptCount}`);
 
-    // Set the delay for the next run (10 minute)
-    const delayInMilliseconds = parseInt(10 * 60 * 1000);
+    // Set the delay for the next run (10 minutes)
+    const delayInMilliseconds = parseInt(100 * 60 * 1000);
 
     // Call the runScript function again after the delay
     setTimeout(runScript, delayInMilliseconds);
@@ -85,119 +86,174 @@ function runScript() {
 
   exec(`node ${scriptPath}`, onScriptExit);
 }
+app.use(
+  session({
+    secret: "y", // Replace with a secure secret
+    resave: false,
+    saveUninitialized: false,
+    // Add any other session configuration options as needed
+  })
+);
 
 // Routes
 app.get("/info", getInfo);
 app.get("/infocon", getInfoCon);
 app.delete("/companies/:companyId", deleteCompany);
 app.post("/companies", saveCompany);
+app.post("/login", login);
 
 async function getInfo(req, res) {
   try {
     const companyId = req.query.companyId;
 
-    const companiesQuery = `
-    SELECT
-    c.company_id AS company_id,
-    c.name AS company_name,
-    GROUP_CONCAT(DISTINCT r.id) AS repository_ids,
-    GROUP_CONCAT(DISTINCT r.name) AS repository_names,
-    GROUP_CONCAT(r.capacityGB) AS repository_capacities,
-    GROUP_CONCAT(r.freeGB) AS repository_frees,
-    GROUP_CONCAT(r.usedSpaceGB) AS repository_usedSpaces,
-    ls.session_name AS session_name,
-    ls.session_endTime AS session_endTime,
-    ls.session_resultResult AS session_resultResult,
-    ls.session_resultMessage AS session_resultMessage
-FROM
-    companies c
-JOIN
-    repositories r ON c.company_id = r.company_id
-LEFT JOIN (
-    SELECT
-        s.company_id,
-        s.name AS session_name,
-        s.endTime AS session_endTime,
-        s.resultResult AS session_resultResult,
-        s.resultMessage AS session_resultMessage
-    FROM
+    // Your SQL query here...
+    const combinedQuery = `
+      SELECT
+        'Session' AS record_type,
+        s.id AS record_id,
+        s.company_id AS company_id,
+        c.name AS company_name,
+        s.name AS record_name,
+        s.activityID AS record_activityID,
+        s.sessionType AS record_sessionType,
+        s.creationTime AS record_creationTime,
+        s.endTime AS record_endTime,
+        s.state AS record_state,
+        s.progressPercent AS record_progressPercent,
+        s.resultResult AS record_resultResult,
+        s.resultMessage AS record_resultMessage,
+        s.resultIsCanceled AS record_resultIsCanceled,
+        s.resourceId AS record_resourceId,
+        s.resourceReference AS record_resourceReference,
+        s.parentSessionId AS record_parentSessionId,
+        s.usn AS record_usn,
+        NULL AS repository_id,
+        NULL AS repository_name,
+        NULL AS repository_type,
+        NULL AS repository_description,
+        NULL AS repository_hostId,
+        NULL AS repository_hostName,
+        NULL AS repository_path,
+        NULL AS repository_capacityGB,
+        NULL AS repository_freeGB,
+        NULL AS repository_usedSpaceGB
+      FROM
         sessions s
-    INNER JOIN (
-        SELECT
-            company_id,
-            MAX(endTime) AS max_endTime
-        FROM
-            sessions
-        GROUP BY
-            company_id
-    ) AS latest ON s.company_id = latest.company_id AND s.endTime = latest.max_endTime
-) AS ls ON c.company_id = ls.company_id
-WHERE
-    c.company_id = c.company_id -- Specify the company IDs here
-GROUP BY
-    c.company_id, c.name, ls.session_name, ls.session_endTime, ls.session_resultResult, ls.session_resultMessage
-ORDER BY
-    CASE
-        WHEN ls.session_resultResult = 'Failed' THEN 1
-        WHEN ls.session_resultResult = 'Warning' THEN 2
-        WHEN ls.session_resultResult = 'Success' THEN 3
-        ELSE 4
-    END;`;
-    const companiesRows = await databaseManager.query(companiesQuery, [
+      INNER JOIN
+        companies c ON s.company_id = c.company_id
+      WHERE
+        s.company_id = s.company_id
+      UNION ALL
+      SELECT
+        'Repository' AS record_type,
+        NULL AS record_id,
+        r.company_id AS company_id,
+        c.name AS company_name,
+        NULL AS record_name,
+        NULL AS record_activityID,
+        NULL AS record_sessionType,
+        NULL AS record_creationTime,
+        NULL AS record_endTime,
+        NULL AS record_state,
+        NULL AS record_progressPercent,
+        NULL AS record_resultResult,
+        NULL AS record_resultMessage,
+        NULL AS record_resultIsCanceled,
+        NULL AS record_resourceId,
+        NULL AS record_resourceReference,
+        NULL AS record_parentSessionId,
+        NULL AS record_usn,
+        r.id AS repository_id,
+        r.name AS repository_name,
+        r.type AS repository_type,
+        r.description AS repository_description,
+        r.hostId AS repository_hostId,
+        r.hostName AS repository_hostName,
+        r.path AS repository_path,
+        r.capacityGB AS repository_capacityGB,
+        r.freeGB AS repository_freeGB,
+        r.usedSpaceGB AS repository_usedSpaceGB
+      FROM
+        repositories r
+      INNER JOIN
+        companies c ON r.company_id = c.company_id
+      WHERE
+        r.company_id = r.company_id
+    `;
+
+    const combinedRows = await databaseManager.query(combinedQuery, [
+      companyId,
       companyId,
     ]);
 
-    const repositoriesData = [];
-    if (Array.isArray(companiesRows)) {
-      for (const companiesRow of companiesRows) {
-        const company_id = companiesRow.company_id;
+    if (Array.isArray(combinedRows)) {
+      // Create a map to store companies grouped by company_id and company_name
+      const companiesMap = new Map();
 
-        // Split the comma-separated values into arrays
-        const repositoryIds = companiesRow.repository_ids.split(",");
-        const repositoryNames = companiesRow.repository_names.split(",");
-        const repositoryCapacities =
-          companiesRow.repository_capacities.split(",");
-        const repositoryFrees = companiesRow.repository_frees.split(",");
-        const repositoryUsedSpaces =
-          companiesRow.repository_usedSpaces.split(",");
+      for (const combinedRow of combinedRows) {
+        const company_id = combinedRow.company_id;
+        const company_name = combinedRow.company_name;
 
-        // Create an array of repositories
-        const repositories = repositoryIds.map((_, index) => ({
-          repository_id: repositoryIds[index],
-          repository_name: repositoryNames[index],
-          repository_capacityGB: parseFloat(repositoryCapacities[index]),
-          repository_freeGB: parseFloat(repositoryFrees[index]),
-          repository_usedSpaceGB: parseFloat(repositoryUsedSpaces[index]),
-        }));
+        // Check if the company_id is already in the map; if not, add it
+        if (!companiesMap.has(company_id)) {
+          companiesMap.set(company_id, {
+            company_id,
+            company_name,
+            repositories: [],
+            sessions: [],
+          });
+        }
 
-        // Create a session object
-        const session = {
-          session_id: companiesRow.session_id,
-          session_name: companiesRow.session_name,
-          session_endTime: companiesRow.session_endTime,
-          session_resultResult: companiesRow.session_resultResult,
-          session_resultMessage: companiesRow.session_resultMessage,
-        };
+        const currentCompany = companiesMap.get(company_id);
 
-        // Create a company object with repositories and sessions
-        const company = {
-          company_id: companiesRow.company_id,
-          company_name: companiesRow.company_name,
-          repositories: repositories,
-          sessions: [session],
-        };
-
-        repositoriesData.push(company);
+        // Determine if the row is a "Session" or "Repository" based on recordType
+        if (combinedRow.record_type === "Session") {
+          // Process and add session-related data to the current company
+          const sessionData = {
+            session_id: combinedRow.record_id,
+            session_name: combinedRow.record_name,
+            session_endTime: combinedRow.record_endTime,
+            session_resultResult: combinedRow.record_resultResult,
+            session_resultMessage: combinedRow.record_resultMessage,
+          };
+          currentCompany.sessions.push(sessionData);
+        } else if (combinedRow.record_type === "Repository") {
+          // Process and add repository-related data to the current company
+          const repositoryData = {
+            repository_id: combinedRow.repository_id,
+            repository_name: combinedRow.repository_name,
+            repository_type: combinedRow.repository_type,
+            repository_description: combinedRow.repository_description,
+            repository_hostId: combinedRow.repository_hostId,
+            repository_hostName: combinedRow.repository_hostName,
+            repository_path: combinedRow.repository_path,
+            repository_capacityGB: combinedRow.repository_capacityGB,
+            repository_freeGB: combinedRow.repository_freeGB,
+            repository_usedSpaceGB: combinedRow.repository_usedSpaceGB,
+          };
+          currentCompany.repositories.push(repositoryData);
+        }
       }
+
+      // Sort sessions within each company by endTime (newest to latest)
+      companiesMap.forEach((company) => {
+        company.sessions.sort(
+          (a, b) => new Date(b.session_endTime) - new Date(a.session_endTime)
+        );
+      });
+
+      // Convert the map values (grouped companies) to an array
+      const repositoriesData = [...companiesMap.values()];
+
+      // Send the grouped data as a JSON response
+      res.json(repositoriesData);
     } else {
       console.error("Invalid response from the database. Expected an array.");
-      console.error("Response:", companiesRows); // Log the response
+      console.error("Response:", combinedRows);
       return res
         .status(500)
         .json({ error: "An error occurred while fetching data." });
     }
-
-    res.json(repositoriesData);
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ error: "An error occurred while fetching data." });
@@ -243,6 +299,45 @@ async function getInfoCon(req, res) {
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ error: "An error occurred while fetching data." });
+  }
+}
+
+async function login(req, res) {
+  try {
+    const { username, password } = req.body;
+
+    // Check if username and password are provided
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username and password are required." });
+    }
+
+    // Check if the user exists in the database
+    const userQuery = "SELECT * FROM users WHERE Username = ?";
+    const userRows = await databaseManager.query(userQuery, [username]);
+
+    if (userRows.length === 0) {
+      return res.status(401).json({ error: "Invalid username or password." });
+    }
+
+    const user = userRows[0];
+
+    // Check if the password matches (You should hash and salt the passwords in production)
+    if (password !== user.Password) {
+      return res.status(401).json({ error: "Invalid username or password." });
+    }
+
+    // Successful login
+    // Set session properties
+    req.session.isloggedIn = true;
+    req.session.user = user; // Store user information in the session if needed
+
+    // Send a JSON response indicating a successful login
+    res.json({ message: "Login successful" });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).json({ error: "An error occurred while logging in." });
   }
 }
 

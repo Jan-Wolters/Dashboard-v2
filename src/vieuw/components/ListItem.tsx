@@ -1,4 +1,3 @@
-// ListItem.tsx
 import { useState } from "react";
 import StatusIcon from "./StatusIcon";
 
@@ -32,6 +31,29 @@ function ListItem({ company_name, repositories, sessions }: ListItemProps) {
     setIsExpanded(!isExpanded);
   };
 
+  const renderLatestSessionStatusAndDate = () => {
+    if (!sessions || sessions.length === 0) {
+      return null;
+    }
+
+    // Get the latest session
+    const latestSession = sessions[sessions.length - 1];
+
+    return (
+      <div className="d-flex flex-fill">
+        <div className="flex-fill py-2 px-3 mx-1">
+          <StatusIcon resultMessage={latestSession.session_resultResult} />
+        </div>
+        <div style={{ width: "300px" }}>
+          <div className="py-2 mx-1 ">
+            {/* Format session end time */}
+            {new Date(latestSession.session_endTime).toLocaleString()}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <li>
       <div
@@ -39,34 +61,7 @@ function ListItem({ company_name, repositories, sessions }: ListItemProps) {
         onClick={handleClick}
       >
         <span className="w-25 py-2 px-3 mx-1">{company_name}</span>
-        <div className="flex-fill py-2 px-3 mx-1">
-          <div className="flex-fill py-2 px-3 mx-1">
-            {sessions && sessions.length > 0 && (
-              <>
-                {sessions.map((session, index) => (
-                  <StatusIcon
-                    key={index}
-                    resultMessage={session.session_resultResult}
-                  />
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-
-        <div>
-          {" "}
-          {sessions && sessions.length > 0 && (
-            <>
-              {sessions.map((session) => (
-                <div className="flex-fill py-2 mx-1">
-                  {/* Format session end time */}
-                  {new Date(session.session_endTime).toLocaleString()}
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+        {renderLatestSessionStatusAndDate()}
       </div>
 
       {isExpanded && (

@@ -1,3 +1,66 @@
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Dashboard from "./vieuw/RoutePath/Dashboard.tsx";
+import Company from "./vieuw/RoutePath/CompanyADD.tsx";
+import CompanyUP from "./vieuw/RoutePath/CompanyUPDATE.tsx";
+import CompanyLOG from "./vieuw/RoutePath/Company_login.tsx";
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  const handleLogin = () => {
+    // Simulate a successful login for testing purposes
+    setIsLoggedIn(false);
+    console.log("User logged in");
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    console.log("User logged out");
+  };
+
+  const ProtectedRoute = ({ element, path }) => {
+    if (isLoggedIn) {
+      return element;
+    } else {
+      console.log("Redirecting to /Login");
+      return <Navigate to="/Login" />;
+    }
+  };
+
+  return (
+    <Router>
+      <div className="mt-4">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/Login" element={<CompanyLOG onLogin={handleLogin} />} />
+          <Route
+            path="/Company"
+            element={<ProtectedRoute element={<Company />} />}
+          />
+          <Route
+            path="/CompanyUP"
+            element={<ProtectedRoute element={<CompanyUP />} />}
+          />
+          <Route
+            path="/CompanyADD"
+            element={<ProtectedRoute element={<CompanyADD />} />}
+          />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+/////////////////////////////////////////////
+
+
 // NavBar.js
 import React from "react";
 import { Link } from "react-router-dom";
