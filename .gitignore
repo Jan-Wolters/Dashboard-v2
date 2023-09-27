@@ -6,12 +6,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+test.vbs 
 node_modules
 dist
 dist-ssr
 *.local
-
+forgetserver.mjs
+vite.config.ts.timestamp*
+.env
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

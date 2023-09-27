@@ -1,26 +1,39 @@
+import Company from "../vieuw/RoutePath/CompanyADD";
+
 export interface Repository {
-  repository_id: number;
-  repository_name: string;
-  repository_description: string;
-  repository_hostId: number;
-  repository_hostName: string;
-  repository_path: string;
-  repository_capacityGB: number;
-  repository_freeGB: number;
-  repository_usedSpaceGB: number;
+  id: number,
+  name: string,
+  description: string,
+  hostId: number,
+  hostName: string,
+  path: string,
+  capacityGB: number,
+  freeGB: number,
+  usedSpaceGB: number
 }
 
 export interface Session {
-  session_id: string;
-  session_name: string;
-  session_endTime: string;
-  session_resultResult: string;
-  session_resultMessage: string;
+  sessions_id: string,
+  company_id: number,
+  name: string,
+  activityId: string,
+  sessionType: string,
+  creationTime: string,
+  endTime: string,
+  state: string,
+  progressPercent: number,
+  resultResult: string,
+  resultMessage: string,
+  resultIsCanceled: number,
+  resourceId: string,
+  resourceReference: string,
+  parentSessionId: string,
+  usn: number
 }
 
 export interface Company {
   company_id: number;
-  company_name: string;
+  name: string;
   repositories: Repository[];
   sessions: Session[];
 }
@@ -49,15 +62,10 @@ const fetchEndpoint = async (endpoint: string) => {
   }
 };
 
-const fetchAndMapData = async <T>(endpoint: string): Promise<T[]> => {
-  const data = await fetchEndpoint(endpoint);
-  return data.map((item: T) => item);
-};
-
 export const fetchData = async (): Promise<Company[]> => {
   try {
     const endpoint = `http://localhost:3008/info`;
-    const companyData = await fetchAndMapData<Company>(endpoint);
+    const companyData = await fetchEndpoint(endpoint);
     return companyData;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -73,7 +81,7 @@ export const fetchDatacon = async (): Promise<CompanyList[] | null> => {
     const response = await fetch(endpoint);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch data");
+      throw new Error("Failed to fetch data from repositories.ts");
     }
 
     const companyData = await response.json();
@@ -86,7 +94,7 @@ export const fetchDatacon = async (): Promise<CompanyList[] | null> => {
       throw new Error("Data received is not an array");
     }
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching data from repositories.ts:", error);
     return null;
   }
 };

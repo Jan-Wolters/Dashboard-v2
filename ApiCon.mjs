@@ -62,7 +62,7 @@ class AccessTokenManager {
         );
         const responseText = await response.text(); // Log the response content
         console.error("Response Content:", responseText);
-        throw new Error("Failed to fetch access token");
+        throw new Error("Failed to fetch access token from APICON");
       }
 
       const data = await response.json();
@@ -322,69 +322,76 @@ class AccessTokenManager {
   async executeApiRequests() {
     try {
       const apiCredentialsList = await this.getApiCredentialsFromDB();
-
+  
       for (const apiCredentials of apiCredentialsList) {
         console.log(`Processing Company ID: ${apiCredentials.company_id}`);
-
-        await this.fetchAccessToken(
-          apiCredentials.ip,
-          apiCredentials.port,
-          apiCredentials.username,
-          apiCredentials.password
-        );
-
-        const Veaam_Session_URL = process.env.VEAAM_SESSIONSURL;
-        const Veaam_Repositories_URL = process.env.VEEAM_REPOSITORIEURL;
-
-        const sessionsApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}${Veaam_Session_URL}`;
-        const repositoriesApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}${Veaam_Repositories_URL}`;
-
-        // Fetch data from the sessions API and log it to the console
-        console.log("Fetching sessions data...");
-        const sessionsData = await this.fetchDataFromApi(sessionsApiUrl, true); // Pass true to ignore SSL certificate validation
-
-        // Save the sessions data to the database along with the company_id
-        console.log("Saving sessions data...");
-        await this.saveDataToDatabase(
-          sessionsData,
-          apiCredentials.company_id,
-          "sessions"
-        );
-
-        // Fetch data from the repositories API and log it to the console
-        console.log("Fetching repositories data...");
-        const repositoriesData = await this.fetchDataFromApi(
-          repositoriesApiUrl,
-          true
-        ); // Pass true to ignore SSL certificate validation
-
-        // Save the repositories data to the database
-        console.log("Saving repositories data...");
-        await this.saveDataToDatabase(
-          repositoriesData,
-          apiCredentials.company_id,
-          "repositories"
-        );
-
-        console.log(
-          `Processing Company ID ${apiCredentials.company_id} completed.`
-        );
+  
+        try {
+          await this.fetchAccessToken(
+            apiCredentials.ip,
+            apiCredentials.port,
+            apiCredentials.username,
+            apiCredentials.password
+          );
+  
+          const Veaam_Session_URL = process.env.VEAAM_SESSIONSURL;
+          const Veaam_Repositories_URL = process.env.VEEAM_REPOSITORIEURL;
+  
+          const sessionsApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}${Veaam_Session_URL}`;
+          const repositoriesApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}${Veaam_Repositories_URL}`;
+  
+          // Fetch data from the sessions API and log it to the console
+          console.log("Fetching sessions data...");
+          const sessionsData = await this.fetchDataFromApi(sessionsApiUrl, true); // Pass true to ignore SSL certificate validation
+  
+          // Save the sessions data to the database along with the company_id
+          console.log("Saving sessions data...");
+          await this.saveDataToDatabase(
+            sessionsData,
+            apiCredentials.company_id,
+            "sessions"
+          );
+  
+          // Fetch data from the repositories API and log it to the console
+          console.log("Fetching repositories data...");
+          const repositoriesData = await this.fetchDataFromApi(
+            repositoriesApiUrl,
+            true
+          ); // Pass true to ignore SSL certificate validation
+  
+          // Save the repositories data to the database
+          console.log("Saving repositories data...");
+          await this.saveDataToDatabase(
+            repositoriesData,
+            apiCredentials.company_id,
+            "repositories"
+          );
+  
+          console.log(
+            `Processing Company ID ${apiCredentials.company_id} completed.`
+          );
+        } catch (error) {
+          console.error(
+            `Error processing Company ID ${apiCredentials.company_id}:`,
+            error
+          );
+          // Continue to the next company even if an error occurs
+          continue;
+        }
       }
-
+  
       console.log("Success");
     } catch (error) {
       console.error("Error executing API requests:", error);
       console.log("Failed");
     }
   }
+  
 }
 
-(async () => {
+export async function setUpVeeam(){
   const accessTokenManager = new AccessTokenManager();
   console.log("Starting ApiCon.js...");
   await accessTokenManager.executeApiRequests();
   console.log("ApiCon.js execution completed.");
-})();
-
-/*
- */
+};
