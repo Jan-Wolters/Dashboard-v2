@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Construct the absolute path to the .env file using the current module's directory
-const dotenvPath = path.resolve(__dirname, "..", "..", "..", ".env");
+const dotenvPath = path.resolve(__dirname, ".env");
 
 // Load environment variables from the .env file
 dotenv.config({ path: dotenvPath });
@@ -322,10 +322,10 @@ class AccessTokenManager {
   async executeApiRequests() {
     try {
       const apiCredentialsList = await this.getApiCredentialsFromDB();
-  
+
       for (const apiCredentials of apiCredentialsList) {
         console.log(`Processing Company ID: ${apiCredentials.company_id}`);
-  
+
         try {
           await this.fetchAccessToken(
             apiCredentials.ip,
@@ -333,17 +333,20 @@ class AccessTokenManager {
             apiCredentials.username,
             apiCredentials.password
           );
-  
+
           const Veaam_Session_URL = process.env.VEAAM_SESSIONSURL;
           const Veaam_Repositories_URL = process.env.VEEAM_REPOSITORIEURL;
-  
+
           const sessionsApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}${Veaam_Session_URL}`;
           const repositoriesApiUrl = `https://${apiCredentials.ip}:${apiCredentials.port}${Veaam_Repositories_URL}`;
-  
+
           // Fetch data from the sessions API and log it to the console
           console.log("Fetching sessions data...");
-          const sessionsData = await this.fetchDataFromApi(sessionsApiUrl, true); // Pass true to ignore SSL certificate validation
-  
+          const sessionsData = await this.fetchDataFromApi(
+            sessionsApiUrl,
+            true
+          ); // Pass true to ignore SSL certificate validation
+
           // Save the sessions data to the database along with the company_id
           console.log("Saving sessions data...");
           await this.saveDataToDatabase(
@@ -351,14 +354,14 @@ class AccessTokenManager {
             apiCredentials.company_id,
             "sessions"
           );
-  
+
           // Fetch data from the repositories API and log it to the console
           console.log("Fetching repositories data...");
           const repositoriesData = await this.fetchDataFromApi(
             repositoriesApiUrl,
             true
           ); // Pass true to ignore SSL certificate validation
-  
+
           // Save the repositories data to the database
           console.log("Saving repositories data...");
           await this.saveDataToDatabase(
@@ -366,7 +369,7 @@ class AccessTokenManager {
             apiCredentials.company_id,
             "repositories"
           );
-  
+
           console.log(
             `Processing Company ID ${apiCredentials.company_id} completed.`
           );
@@ -379,19 +382,18 @@ class AccessTokenManager {
           continue;
         }
       }
-  
+
       console.log("Success");
     } catch (error) {
       console.error("Error executing API requests:", error);
       console.log("Failed");
     }
   }
-  
 }
 
-export async function setUpVeeam(){
+export async function setUpVeeam() {
   const accessTokenManager = new AccessTokenManager();
   console.log("Starting ApiCon.js...");
   await accessTokenManager.executeApiRequests();
   console.log("ApiCon.js execution completed.");
-};
+}

@@ -144,3 +144,24 @@ export const deleteCompany = async (companyId: number): Promise<void> => {
     throw error;
   }
 };
+export const login = async (username: string, password: string): Promise<boolean> => {
+  try {
+    const response = await fetch("http://localhost:3008/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Authentication failed");
+    }
+
+    console.log("Authentication successful");
+    return true;
+  } catch (error) {
+    console.error("Error during authentication:", error);
+    return false;
+  }
+};
