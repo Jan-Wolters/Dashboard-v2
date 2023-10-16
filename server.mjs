@@ -1,6 +1,7 @@
 /* eslint-env node */
 import express from "express";
 import { json } from "express";
+import http from "http"; // Import http module
 import { createPool } from "mysql2";
 import cors from "cors";
 
@@ -12,7 +13,8 @@ import { setUpVeeam } from "./ApiCon.mjs";
 await setUpVeeam();
 setInterval(() => {
   setUpVeeam();
-}, 5000);
+}, 5 * 60 * 1000);
+
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,10 +26,13 @@ const dotenvPath = path.resolve(__dirname, ".env");
 dotenv.config({ path: dotenvPath });
 
 const app = express();
-const port = 3008;
+const ip = "localhost"; // Change the IP address here
+const port = "8080";
 
 app.use(cors());
 app.use(json());
+
+app.use(express.static(path.resolve(__dirname, "./dist")));
 
 // Database configuration
 const dbConfig = {
@@ -196,7 +201,7 @@ console.log("Starting ApiCon.js...");
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
+  console.log(`Server listening at http://${ip}:${port}`);
 });
 
 function saveCompany(req, res) {

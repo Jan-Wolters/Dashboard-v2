@@ -236,6 +236,12 @@ class AccessTokenManager {
         let values = [];
 
         if (tableName === "sessions") {
+          // Format creationTime and endTime to ISO 8601 format
+          const formattedCreationTime = new Date(
+            record.creationTime
+          ).toISOString();
+          const formattedEndTime = new Date(record.endTime).toISOString();
+
           sql = `INSERT INTO sessions (id, company_id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
@@ -260,8 +266,8 @@ class AccessTokenManager {
             record.name,
             record.activityId,
             record.sessionType,
-            record.creationTime,
-            record.endTime,
+            formattedCreationTime, // Use the formatted creationTime
+            formattedEndTime, // Use the formatted endTime
             record.state,
             record.progressPercent,
             record.progressPercent < 100 ? null : record.result.result,

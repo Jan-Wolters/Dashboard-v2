@@ -64,7 +64,7 @@ const fetchEndpoint = async (endpoint: string) => {
 
 export const fetchData = async (): Promise<Company[]> => {
   try {
-    const endpoint = `http://localhost:3008/info`;
+    const endpoint = `http://localhost:8080/info`;
     const companyData = await fetchEndpoint(endpoint);
     return companyData;
   } catch (error) {
@@ -75,7 +75,7 @@ export const fetchData = async (): Promise<Company[]> => {
 
 export const fetchDatacon = async (): Promise<CompanyList[] | null> => {
   try {
-    const endpoint = `http://localhost:3008/infocon`;
+    const endpoint = `http://localhost:8080/infocon`;
     console.log("Fetching data from:", endpoint);
 
     const response = await fetch(endpoint);
@@ -103,7 +103,7 @@ export const saveCompany = async (
   companyData: Partial<Company>
 ): Promise<void> => {
   try {
-    const response = await fetch("http://localhost:3008/companies", {
+    const response = await fetch("http://localhost:8080/companies", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -127,7 +127,7 @@ export const saveCompany = async (
 
 export const deleteCompany = async (companyId: number): Promise<void> => {
   try {
-    const response = await fetch(`http://localhost:3008/companies/${companyId}`, {
+    const response = await fetch(`http://localhost:8080/companies/${companyId}`, {
       method: "DELETE",
     });
 
@@ -146,7 +146,7 @@ export const deleteCompany = async (companyId: number): Promise<void> => {
 };
 export const login = async (username: string, password: string): Promise<boolean> => {
   try {
-    const response = await fetch("http://localhost:3008/login", {
+    const response = await fetch("http://localhost:8080/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

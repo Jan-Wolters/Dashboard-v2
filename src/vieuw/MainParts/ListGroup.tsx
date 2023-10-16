@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  fetchData,
-  Company,
-  Repository,
-  Session,
-} from "../../model/repositories.ts";
+import { fetchData, Company } from "../../model/repositories.ts";
 import StatusIcon from "../components/StatusIcon.tsx";
 import React from "react";
 
@@ -18,6 +13,13 @@ function Sess({ name }: { name: string }) {
 
 function CompanyComponent({ name, repositories, sessions }: Company) {
   const [collapsed, setCollapsed] = React.useState(true);
+
+  // Fix the sorting issue by using getTime()
+  const sortedSessions = sessions
+    .slice()
+    .sort(
+      (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
+    );
 
   return (
     <li
@@ -35,18 +37,7 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
           <div style={{ width: "300px" }}>
             <div className="py-2 mx-1">
               {/* Format session end time */}
-              {new Date(
-                sessions
-                  .slice() // Create a shallow copy to avoid modifying the original array
-                  .sort((a, b) => {
-                    // Define the sorting order based on resultMessage
-                    const priorityOrder = { Success: 2, Warning: 1, Failed: 0 };
-                    return (
-                      priorityOrder[a.resultMessage] -
-                      priorityOrder[b.resultMessage]
-                    );
-                  })[0]?.endTime
-              ).toLocaleString()}
+              {new Date(sortedSessions[0]?.endTime).toLocaleString()}
             </div>
           </div>
         </div>
@@ -100,40 +91,34 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
             <div className="">
               <h1>Sessions:</h1>
               <ul className="list-group d-flex flex-wrap">
-                {sessions
-                  .slice() // Create a shallow copy to avoid modifying the original array
-                  .sort((a, b) => new Date(b.endTime) - new Date(a.endTime)) // Sort sessions by endTime in descending order
-                  .map((session, i) => (
-                    <li key={i} className="list-group-item">
-                      <div className="row">
-                        <div className="col-md-4">
-                          {" "}
-                          <Sess name={session.name} />
-                          <div className="d-flex flex-column">
-                            <div className="py-2">
-                              <StatusIcon
-                                resultMessage={session.resultResult}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div
-                            className="py-2 mx-4"
-                            style={{ maxWidth: "300px" }}
-                          >
-                            {session.resultMessage}
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className="py-2 mx-1">
-                            {/* Format session end time */}
-                            {new Date(session.endTime).toLocaleString()}
+                {sortedSessions.map((session, i) => (
+                  <li key={i} className="list-group-item">
+                    <div className="row">
+                      <div className="col-md-4">
+                        <Sess name={session.name} />
+                        <div className="d-flex flex-column">
+                          <div className="py-2">
+                            <StatusIcon resultMessage={session.resultResult} />
                           </div>
                         </div>
                       </div>
-                    </li>
-                  ))}
+                      <div className="col-md-4">
+                        <div
+                          className="py-2 mx-4"
+                          style={{ maxWidth: "300px" }}
+                        >
+                          {session.resultMessage}
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="py-2 mx-1">
+                          {/* Format session end time */}
+                          {new Date(session.endTime).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
           </>
@@ -177,7 +162,11 @@ function CompanyGroup() {
   // Filter the companies based on resultResult
   const filteredCompanies = companies.slice().sort((a, b) => {
     // Define the sorting order based on resultResult
-    const priorityOrder = { Success: 2, Warning: 1, Failed: 0 };
+    const priorityOrder: { [key: string]: number } = {
+      Success: 2,
+      Warning: 1,
+      Failed: 0,
+    };
     return (
       priorityOrder[a.sessions[0].resultResult] -
       priorityOrder[b.sessions[0].resultResult]

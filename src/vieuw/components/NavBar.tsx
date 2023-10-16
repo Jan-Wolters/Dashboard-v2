@@ -1,10 +1,14 @@
-// NavBar.js
-import React from "react";
 import { Link } from "react-router-dom";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-function NavBar({ isLoggedIn, onLogout }) {
+interface NavBarProps {
+  isLoggedIn: boolean;
+  onLogout: () => void;
+}
+
+function NavBar({ isLoggedIn, onLogout }: NavBarProps) {
   return (
     <nav className="navbar border border-dark shadow-sm mb-2 bg-white rounded">
       <div className="d-flex justify-content-between align-items-center w-100 my-2">
@@ -21,14 +25,13 @@ function NavBar({ isLoggedIn, onLogout }) {
         </div>
 
         <div className="d-flex justify-content-center mx-auto">
-          <div className=" d-flex">
+          <div className="d-flex">
             <div className="nav-item me-4">
               <button id="refreshButton">Refresh</button>
             </div>
             {isLoggedIn ? (
               <>
                 <div className="nav-item me-4">
-                  {/* Use onClick to call the onLogout function */}
                   <button onClick={onLogout} className="nav-link">
                     Logout
                   </button>

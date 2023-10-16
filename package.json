@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "start": "npm-run-all --parallel start:vite start:server",
     "start:vite": "vite --open",
-    "start:server": "nodemon server.mjs"
+    "start:server": "nodemon server.mjs",
+    "serve": "node ./server.mjs"
   },
   "dependencies": {
     "@types/axios": "^0.14.0",

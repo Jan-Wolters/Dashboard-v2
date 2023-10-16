@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { login } from "../../model/repositories";
 import { useNavigate } from "react-router-dom";
 
-function Login({ onLogin }) {
+function Login({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

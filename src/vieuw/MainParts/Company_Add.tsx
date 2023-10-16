@@ -68,7 +68,7 @@ function CompanyAdd() {
   const saveCompany = async (formData: FormData) => {
     try {
       const response = await axios.post(
-        "http://localhost:3008/companies",
+        "http://localhost:8080/companies",
         formData
       );
       console.log("Company saved successfully");

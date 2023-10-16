@@ -1,5 +1,3 @@
-import React from "react";
-
 interface CompanyListprop {
   company_id: number;
   company_name: string;
