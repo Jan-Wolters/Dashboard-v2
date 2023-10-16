@@ -24,7 +24,9 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
   return (
     <li
       onClick={() => setCollapsed(!collapsed)}
-      className={`border border-dark text-center py-3 mt-2 position-relative d-flex align-items-center shadow-sm`}
+      className={`border border-dark text-center py-3 mt-2 position-relative d-flex align-items-center shadow-sm ${
+        collapsed ? "collapsed-list-item" : ""
+      }`}
     >
       <div className="d-flex flex-column w-100">
         <div className="d-flex justify-content-between align-items-center">
@@ -34,23 +36,21 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
               <StatusIcon resultMessage={sessions[0].resultResult} />
             )}
           </div>
-          <div style={{ width: "300px" }}>
-            <div className="py-2 mx-1">
-              {/* Format session end time */}
-              {new Date(sortedSessions[0]?.endTime).toLocaleString()}
-            </div>
+          <div className="py-2 mx-1">
+            {/* Format session end time */}
+            {new Date(sortedSessions[0]?.endTime).toLocaleString()}
           </div>
         </div>
 
         {!collapsed && (
           <>
-            <div className="">
-              <h1>Repositories:</h1>
+            <div className="my-3">
+              <h2>Repositories:</h2>
               <ul className="list-group d-flex flex-wrap">
                 {repositories.map((repo, i) => (
                   <li key={i} className="list-group-item d-flex flex-column">
                     <Repo name={repo.name} />
-                    <div className="progress">
+                    <div className="progress mt-2">
                       {repo.capacityGB > 0 ? (
                         <div
                           className={`progress-bar ${
@@ -58,7 +58,7 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                               ? "bg-danger"
                               : repo.usedSpaceGB / repo.capacityGB >= 0.75
                               ? "bg-warning"
-                              : ""
+                              : "bg-success"
                           }`}
                           role="progressbar"
                           aria-valuenow={repo.usedSpaceGB}
@@ -88,8 +88,8 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                 ))}
               </ul>
             </div>
-            <div className="">
-              <h1>Sessions:</h1>
+            <div className="my-3">
+              <h2>Sessions:</h2>
               <ul className="list-group d-flex flex-wrap">
                 {sortedSessions.map((session, i) => (
                   <li key={i} className="list-group-item">
@@ -180,7 +180,7 @@ function CompanyGroup() {
           <div className="alert alert-danger">
             <h1>foutmeldingen:</h1>
             {error.message && (
-              <h6 className=" border-bottom border-dark py-2 px-1">
+              <h6 className="border-bottom border-dark py-2 px-1">
                 {error.message}
               </h6>
             )}
@@ -190,11 +190,13 @@ function CompanyGroup() {
           <p className="text-center">Niks gevonden</p>
         ) : (
           <div>
-            <ul className="list-group">
+            <div className="row row-cols-1 row-cols-md-2">
               {filteredCompanies.map((company, i) => (
-                <CompanyComponent key={i} {...company} />
+                <div key={i} className="col mb-4">
+                  <CompanyComponent {...company} />
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>

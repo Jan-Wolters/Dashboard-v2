@@ -26,8 +26,8 @@ const dotenvPath = path.resolve(__dirname, ".env");
 dotenv.config({ path: dotenvPath });
 
 const app = express();
-const ip = "localhost"; // Change the IP address here
-const port = "8080";
+const ip = process.env.PROJECT_IP; // Change the IP address here
+const port = process.env.PROJECT_PORT;
 
 app.use(cors());
 app.use(json());
@@ -106,7 +106,7 @@ async function getCompanies() {
 }
 
 async function getSessions(companyId) {
-  const sessionsQuery = `SELECT * FROM sessions WHERE company_id = ${companyId} ORDER BY endTime DESC;`;
+  const sessionsQuery = `SELECT * FROM sessions WHERE company_id = ${companyId} ORDER BY endTime DESC LIMIT 5;`;
   return databaseManager.query(sessionsQuery);
 }
 
@@ -201,7 +201,7 @@ console.log("Starting ApiCon.js...");
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server listening at http://${ip}:${port}`);
+  console.log(`Server listening at https://${ip}:${port}`);
 });
 
 function saveCompany(req, res) {

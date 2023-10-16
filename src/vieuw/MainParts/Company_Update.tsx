@@ -1,10 +1,20 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Button, Table } from "react-bootstrap";
 import {
   fetchDatacon,
   CompanyList,
   deleteCompany,
 } from "../../model/repositories.ts";
-import { UpItem } from "../components/UpdateItem.tsx";
+
+interface CompanyListprop {
+  company_id: number;
+  company_name: string;
+  company_ip: string;
+  company_port: string;
+  veaamUsername: string;
+  veaamPassword: string;
+  onDelete: () => void; // Callback for deleting
+}
 
 function Company_update() {
   const [companies, setCompanies] = useState<CompanyList[] | null>(null);
@@ -27,22 +37,39 @@ function Company_update() {
         {companies === null ? (
           <p className="text-center">Loading...</p>
         ) : (
-          <div>
-            <ul className="list-group">
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Company ID</th>
+                <th>Company Name</th>
+                <th>IP Address</th>
+                <th>Port</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
               {companies.map((company) => (
-                <UpItem
-                  key={company.company_id}
-                  company_id={company.company_id}
-                  company_name={company.company_name}
-                  company_ip={company.company_ip}
-                  company_port={company.company_port}
-                  veaamUsername={company.veaamUsername}
-                  veaamPassword={company.veaamPassword}
-                  onDelete={() => deleteCompany(company.company_id)} // Pass the delete function
-                />
+                <tr key={company.company_id}>
+                  <td>{company.company_id}</td>
+                  <td>{company.company_name}</td>
+                  <td>{company.company_ip}</td>
+                  <td>{company.company_port}</td>
+                  <td>{company.veaamUsername}</td>
+                  <td>{company.veaamPassword}</td>
+                  <td>
+                    <Button
+                      variant="danger"
+                      onClick={() => deleteCompany(company.company_id)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
               ))}
-            </ul>
-          </div>
+            </tbody>
+          </Table>
         )}
       </div>
     </div>

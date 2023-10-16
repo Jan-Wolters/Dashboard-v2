@@ -1,5 +1,5 @@
+import React from "react";
 import { Link } from "react-router-dom";
-
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
@@ -9,53 +9,70 @@ interface NavBarProps {
 }
 
 function NavBar({ isLoggedIn, onLogout }: NavBarProps) {
-  return (
-    <nav className="navbar border border-dark shadow-sm mb-2 bg-white rounded">
-      <div className="d-flex justify-content-between align-items-center w-100 my-2">
-        <div className="border-1 w-25">
-          <div className="logo">
-            <Link to="/" className="nav-link">
-              <img
-                src="src/assets/Schoonderwolf-diensten_logo.png"
-                className="w-50"
-                alt="Logo"
-              />
-            </Link>
-          </div>
-        </div>
+  const handleRefreshClick = () => {
+    // Reload the page
+    window.location.reload();
+  };
 
-        <div className="d-flex justify-content-center mx-auto">
-          <div className="d-flex">
-            <div className="nav-item me-4">
-              <button id="refreshButton">Refresh</button>
-            </div>
+  return (
+    <nav className="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm mb-3">
+      <div className="container">
+        <Link to="/" className="navbar-brand">
+          <img
+            src="src/assets/Schoonderwolf-diensten_logo.png"
+            alt="Company Logo"
+            className="navbar-logo img-fluid" // Keep the image responsive
+            style={{ maxWidth: "150px" }} // Increase the maximum width
+          />
+        </Link>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto align-items-center">
+            <li className="nav-item">
+              <button
+                id="refreshButton"
+                className="btn btn-primary mx-2"
+                onClick={handleRefreshClick}
+              >
+                Refresh
+              </button>
+            </li>
             {isLoggedIn ? (
               <>
-                <div className="nav-item me-4">
-                  <button onClick={onLogout} className="nav-link">
+                <li className="nav-item">
+                  <button onClick={onLogout} className="btn btn-danger">
                     Logout
                   </button>
-                </div>
-
-                <div className="nav-item me-4">
+                </li>
+                <li className="nav-item">
                   <Link to="/companyADD" className="nav-link">
                     Add
                   </Link>
-                </div>
-                <div className="nav-item me-4">
+                </li>
+                <li className="nav-item">
                   <Link to="/companyUP" className="nav-link">
                     Delete
                   </Link>
-                </div>
+                </li>
               </>
             ) : (
-              <div className="nav-item me-4">
+              <li className="nav-item">
                 <Link to="/Login" className="nav-link">
                   Login
                 </Link>
-              </div>
+              </li>
             )}
-          </div>
+          </ul>
         </div>
       </div>
     </nav>
