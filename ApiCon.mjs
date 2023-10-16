@@ -240,25 +240,27 @@ class AccessTokenManager {
           const formattedCreationTime = new Date(
             record.creationTime
           ).toISOString();
-          const formattedEndTime = new Date(record.endTime).toISOString();
+          const endTimeDate = new Date(record.endTime);
+          endTimeDate.setHours(endTimeDate.getHours() + 2); // Add 2 hours
+          const formattedEndTime = endTimeDate.toISOString();
 
           sql = `INSERT INTO sessions (id, company_id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-            name = VALUES(name),
-            activityId = VALUES(activityId),
-            sessionType = VALUES(sessionType),
-            creationTime = VALUES(creationTime),
-            endTime = VALUES(endTime),
-            state = VALUES(state),
-            progressPercent = VALUES(progressPercent),
-            resultResult = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultResult)),
-            resultMessage = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultMessage)),
-            resultIsCanceled = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultIsCanceled)),
-            resourceId = VALUES(resourceId),
-            resourceReference = VALUES(resourceReference),
-            parentSessionId = VALUES(parentSessionId),
-            usn = VALUES(usn)`;
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                activityId = VALUES(activityId),
+                sessionType = VALUES(sessionType),
+                creationTime = VALUES(creationTime),
+                endTime = VALUES(endTime),
+                state = VALUES(state),
+                progressPercent = VALUES(progressPercent),
+                resultResult = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultResult)),
+                resultMessage = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultMessage)),
+                resultIsCanceled = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultIsCanceled)),
+                resourceId = VALUES(resourceId),
+                resourceReference = VALUES(resourceReference),
+                parentSessionId = VALUES(parentSessionId),
+                usn = VALUES(usn)`;
 
           values = [
             record.id,
@@ -267,7 +269,7 @@ class AccessTokenManager {
             record.activityId,
             record.sessionType,
             formattedCreationTime, // Use the formatted creationTime
-            formattedEndTime, // Use the formatted endTime
+            formattedEndTime, // Use the formatted endTime with 2 hours added
             record.state,
             record.progressPercent,
             record.progressPercent < 100 ? null : record.result.result,
@@ -280,17 +282,17 @@ class AccessTokenManager {
           ];
         } else if (tableName === "repositories") {
           sql = `INSERT INTO repositories (type, id, company_id, name, description, hostId, hostName, path, capacityGB, freeGB, usedSpaceGB)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-            type = VALUES(type),
-            name = VALUES(name),
-            description = VALUES(description),
-            hostId = CASE WHEN id = VALUES(id) THEN VALUES(hostId) ELSE hostId END,
-            hostName = CASE WHEN id = VALUES(id) THEN VALUES(hostName) ELSE hostName END,
-            path = VALUES(path),
-            capacityGB = VALUES(capacityGB),
-            freeGB = VALUES(freeGB),
-            usedSpaceGB = VALUES(usedSpaceGB)`;
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                type = VALUES(type),
+                name = VALUES(name),
+                description = VALUES(description),
+                hostId = CASE WHEN id = VALUES(id) THEN VALUES(hostId) ELSE hostId END,
+                hostName = CASE WHEN id = VALUES(id) THEN VALUES(hostName) ELSE hostName END,
+                path = VALUES(path),
+                capacityGB = VALUES(capacityGB),
+                freeGB = VALUES(freeGB),
+                usedSpaceGB = VALUES(usedSpaceGB)`;
 
           values = [
             record.type,

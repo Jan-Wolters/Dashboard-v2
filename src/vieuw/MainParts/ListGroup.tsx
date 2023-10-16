@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchData, Company } from "../../model/repositories.ts";
 import StatusIcon from "../components/StatusIcon.tsx";
-import React from "react";
 
 function Repo({ name }: { name: string }) {
   return <div>{name}</div>;
@@ -12,9 +11,8 @@ function Sess({ name }: { name: string }) {
 }
 
 function CompanyComponent({ name, repositories, sessions }: Company) {
-  const [collapsed, setCollapsed] = React.useState(true);
+  const [collapsed, setCollapsed] = useState(true);
 
-  // Fix the sorting issue by using getTime()
   const sortedSessions = sessions
     .slice()
     .sort(
@@ -37,7 +35,6 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
             )}
           </div>
           <div className="py-2 mx-1">
-            {/* Format session end time */}
             {new Date(sortedSessions[0]?.endTime).toLocaleString()}
           </div>
         </div>
@@ -112,7 +109,6 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                       </div>
                       <div className="col-md-4">
                         <div className="py-2 mx-1">
-                          {/* Format session end time */}
                           {new Date(session.endTime).toLocaleString()}
                         </div>
                       </div>
@@ -159,19 +155,19 @@ function CompanyGroup() {
     fetchCompanies();
   }, []);
 
-  // Filter the companies based on resultResult
-  const filteredCompanies = companies.slice().sort((a, b) => {
-    // Define the sorting order based on resultResult
-    const priorityOrder: { [key: string]: number } = {
-      Success: 2,
-      Warning: 1,
-      Failed: 0,
-    };
-    return (
-      priorityOrder[a.sessions[0].resultResult] -
-      priorityOrder[b.sessions[0].resultResult]
+  const priorityOrder: { [key: string]: number } = {
+    Success: 2,
+    Warning: 1,
+    Failed: 0,
+  };
+
+  const filteredCompanies = companies
+    .slice()
+    .sort(
+      (a, b) =>
+        priorityOrder[a.sessions[0].resultResult] -
+        priorityOrder[b.sessions[0].resultResult]
     );
-  });
 
   return (
     <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">

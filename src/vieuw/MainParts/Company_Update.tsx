@@ -1,20 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button, Table } from "react-bootstrap";
 import {
   fetchDatacon,
   CompanyList,
   deleteCompany,
 } from "../../model/repositories.ts";
-
-interface CompanyListprop {
-  company_id: number;
-  company_name: string;
-  company_ip: string;
-  company_port: string;
-  veaamUsername: string;
-  veaamPassword: string;
-  onDelete: () => void; // Callback for deleting
-}
 
 function Company_update() {
   const [companies, setCompanies] = useState<CompanyList[] | null>(null);

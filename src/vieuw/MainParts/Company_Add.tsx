@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import axios from "axios";
 import { Alert, Form, Button, Container } from "react-bootstrap";
 
@@ -20,7 +20,7 @@ function CompanyAdd() {
   });
 
   const [message, setMessage] = useState<string | null>(null);
-  const ip = "localhost";
+  const ip = "168.27.51";
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -81,7 +81,7 @@ function CompanyAdd() {
     <Container className="p-4 border border-dark py-5 my-5">
       <h2 className="mb-4">bedrijf toevoegen</h2>
       {message && (
-        <Alert variant={message.startsWith("Error") ? "succes" : "danger"}>
+        <Alert variant={message.startsWith("Error") ? "danger" : "succes"}>
           {message}
         </Alert>
       )}

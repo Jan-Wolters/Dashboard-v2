@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -19,7 +18,7 @@ function NavBar({ isLoggedIn, onLogout }: NavBarProps) {
       <div className="container">
         <Link to="/" className="navbar-brand">
           <img
-            src="src/assets/Schoonderwolf-diensten_logo.png"
+            src="Schoonderwolf-diensten_logo.png"
             alt="Company Logo"
             className="navbar-logo img-fluid" // Keep the image responsive
             style={{ maxWidth: "150px" }} // Increase the maximum width

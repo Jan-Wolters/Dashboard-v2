@@ -46,7 +46,7 @@ export interface CompanyList {
   veaamPassword: string;
 }
 
-const ip = "localhost";
+const ip = "168.27.51";
 const port = "8080"
 
 const fetchEndpoint = async (endpoint: string) => {
