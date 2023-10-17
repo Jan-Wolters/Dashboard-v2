@@ -13,6 +13,10 @@ function Sess({ name }: { name: string }) {
 function CompanyComponent({ name, repositories, sessions }: Company) {
   const [collapsed, setCollapsed] = useState(true);
 
+  if (!sessions || !repositories) {
+    return <div>Company data not available.</div>;
+  }
+
   const sortedSessions = sessions
     .slice()
     .sort(
@@ -30,12 +34,16 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
         <div className="d-flex justify-content-between align-items-center">
           <span className="w-100 w-md-25 py-2 px-3 mx-1 font-size">{name}</span>
           <div className="flex-fill py-2 px-3 mx-1">
-            {sessions.length > 0 && (
+            {sessions.length > 0 && sessions[0].resultResult ? (
               <StatusIcon resultMessage={sessions[0].resultResult} />
+            ) : (
+              <div>No result available</div>
             )}
           </div>
           <div className="py-2 mx-1">
-            {new Date(sortedSessions[0]?.endTime).toLocaleString()}
+            {sortedSessions[0] && sortedSessions[0].endTime
+              ? new Date(sortedSessions[0].endTime).toLocaleString()
+              : "N/A"}
           </div>
         </div>
 
@@ -95,7 +103,13 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                         <Sess name={session.name} />
                         <div className="d-flex flex-column">
                           <div className="py-2">
-                            <StatusIcon resultMessage={session.resultResult} />
+                            {session.resultResult ? (
+                              <StatusIcon
+                                resultMessage={session.resultResult}
+                              />
+                            ) : (
+                              <div>No result available</div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -109,7 +123,9 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                       </div>
                       <div className="col-md-4">
                         <div className="py-2 mx-1">
-                          {new Date(session.endTime).toLocaleString()}
+                          {session.endTime
+                            ? new Date(session.endTime).toLocaleString()
+                            : "N/A"}
                         </div>
                       </div>
                     </div>
@@ -126,7 +142,7 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
 
 function CompanyGroup() {
   const [companies, setCompanies] = useState([] as Company[]);
-  const [error, setError] = useState<null | Error>(null);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -134,22 +150,36 @@ function CompanyGroup() {
         const fetchedCompanies = await fetchData();
         setCompanies(fetchedCompanies);
 
-        const failedCompany = fetchedCompanies.find(
+        const failedCompanies = fetchedCompanies.filter(
           (company) =>
-            company.sessions[0].resultResult === "Failed" ||
-            company.sessions[0].resultResult === "Warning"
+            company.sessions[0] &&
+            (company.sessions[0].resultResult === "Failed" ||
+              company.sessions[0].resultResult === "Warning")
         );
 
-        if (failedCompany) {
-          setError(
-            new Error(
-              `${failedCompany.name} - ${failedCompany.sessions[0].resultResult}: ${failedCompany.sessions[0].resultMessage}`
-            )
-          );
+        if (failedCompanies.length > 0) {
+          const messages = failedCompanies.map((company) => {
+            if (company.sessions[0]) {
+              return `${company.name} - ${
+                company.sessions[0].resultResult || "Result not available"
+              }: ${
+                company.sessions[0].resultMessage || "Message not available"
+              }`;
+            }
+            return ""; // Handle the case where resultResult or resultMessage is undefined
+          });
+          messages.sort((a, b) => {
+            if (a.includes("Failed") && !b.includes("Failed")) return -1;
+            if (!a.includes("Failed") && b.includes("Failed")) return 1;
+            if (a.includes("Warning") && !b.includes("Warning")) return -1;
+            if (!a.includes("Warning") && b.includes("Warning")) return 1;
+            return 0;
+          });
+          setErrorMessages(messages);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError(error as Error);
+        setErrorMessages([(error as Error).message]);
       }
     };
     fetchCompanies();
@@ -165,21 +195,30 @@ function CompanyGroup() {
     .slice()
     .sort(
       (a, b) =>
-        priorityOrder[a.sessions[0].resultResult] -
-        priorityOrder[b.sessions[0].resultResult]
+        priorityOrder[a.sessions[0]?.resultResult || ""] -
+        priorityOrder[b.sessions[0]?.resultResult || ""]
     );
 
   return (
-    <div id="top" className="shadow-lg p-3 mb-5 bg-white rounded">
+    <div id="top" className="shadow-lg p-3 bg-white rounded">
       <div id="List" className="d-fill">
-        {error && (
-          <div className="alert alert-danger">
+        {errorMessages.length > 0 && (
+          <div className="">
             <h1>foutmeldingen:</h1>
-            {error.message && (
-              <h6 className="border-bottom border-dark py-2 px-1">
-                {error.message}
+            {errorMessages.map((errorMessage, index) => (
+              <h6
+                key={index}
+                className={`rounded py-2 px-1 ${
+                  errorMessage.includes("Failed")
+                    ? "alert alert-danger border border-danger"
+                    : errorMessage.includes("Warning")
+                    ? "alert alert-warning border border-warning"
+                    : ""
+                }`}
+              >
+                {errorMessage}
               </h6>
-            )}
+            ))}
           </div>
         )}
         {filteredCompanies.length === 0 ? (

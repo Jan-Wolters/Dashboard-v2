@@ -57,11 +57,11 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/Login" element={<CompanyLOG onLogin={handleLogin} />} />
           <Route
-            path="/CompanyUP"
+            path="/COMPUP"
             element={<ProtectedRoute element={<CompanyUP />} />}
           />
           <Route
-            path="/CompanyADD"
+            path="/COMAD"
             element={<ProtectedRoute element={<Company />} />}
           />
         </Routes>

@@ -13,7 +13,7 @@ import { setUpVeeam } from "./ApiCon.mjs";
 await setUpVeeam();
 setInterval(() => {
   setUpVeeam();
-}, 5 * 60 * 1000);
+}, 2 * 60 * 1000);
 
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);

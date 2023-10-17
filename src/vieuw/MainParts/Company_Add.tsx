@@ -20,7 +20,6 @@ function CompanyAdd() {
   });
 
   const [message, setMessage] = useState<string | null>(null);
-  const ip = "168.27.51";
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -66,10 +65,7 @@ function CompanyAdd() {
 
   const saveCompany = async (formData: FormData) => {
     try {
-      const response = await axios.post(
-        `http://${ip}:8080/companies`,
-        formData
-      );
+      const response = await axios.post(`/companies`, formData);
       return response.data;
     } catch (error) {
       console.error("Error saving company:", error);
@@ -81,7 +77,7 @@ function CompanyAdd() {
     <Container className="p-4 border border-dark py-5 my-5">
       <h2 className="mb-4">bedrijf toevoegen</h2>
       {message && (
-        <Alert variant={message.startsWith("Error") ? "danger" : "succes"}>
+        <Alert variant={message.startsWith("Error") ? "danger" : "success"}>
           {message}
         </Alert>
       )}

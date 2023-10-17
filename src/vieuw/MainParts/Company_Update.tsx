@@ -1,23 +1,34 @@
 import { useState, useEffect } from "react";
-import { Button, Table } from "react-bootstrap";
 import {
   fetchDatacon,
-  CompanyList,
   deleteCompany,
+  CompanyList,
 } from "../../model/repositories.ts";
+import { Table, Button } from "react-bootstrap";
 
 function Company_update() {
   const [companies, setCompanies] = useState<CompanyList[] | null>(null);
 
+  const fetchCompanies = async () => {
+    try {
+      const fetchedCompanies = await fetchDatacon();
+      setCompanies(fetchedCompanies);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const handleDelete = async (companyId: number) => {
+    try {
+      await deleteCompany(companyId);
+      // If the delete operation is successful, reload the page
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting company:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const fetchedCompanies = await fetchDatacon();
-        setCompanies(fetchedCompanies);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
     fetchCompanies();
   }, []);
 
@@ -51,7 +62,7 @@ function Company_update() {
                   <td>
                     <Button
                       variant="danger"
-                      onClick={() => deleteCompany(company.company_id)}
+                      onClick={() => handleDelete(company.company_id)}
                     >
                       Delete
                     </Button>

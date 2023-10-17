@@ -54,12 +54,12 @@ function NavBar({ isLoggedIn, onLogout }: NavBarProps) {
                   </button>
                 </li>
                 <li className="nav-item">
-                  <Link to="/companyADD" className="nav-link">
+                  <Link to="/COMAD" className="nav-link">
                     Add
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link to="/companyUP" className="nav-link">
+                  <Link to="/COMUP" className="nav-link">
                     Delete
                   </Link>
                 </li>

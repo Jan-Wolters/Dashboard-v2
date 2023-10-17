@@ -23,6 +23,7 @@ const mysqlConfig = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
 };
+
 class AccessTokenManager {
   constructor() {
     this.access_token = null;
@@ -105,7 +106,6 @@ class AccessTokenManager {
       for (const row of rows) {
         const apiCredentials = {
           company_id: row.company_id,
-
           ip: row.ip,
           port: row.port,
           username: row.veaamUsername,
@@ -197,20 +197,20 @@ class AccessTokenManager {
     try {
       // Create a table for repositories if it doesn't exist (you can modify this SQL query based on your table structure)
       await connection.execute(`
-      CREATE TABLE IF NOT EXISTS repositories (
-        type VARCHAR(255),
-        id VARCHAR(255),
-        company_id INT,
-        name VARCHAR(255),
-        description TEXT,
-        hostId VARCHAR(255),
-        hostName VARCHAR(255),
-        path VARCHAR(255),
-        capacityGB FLOAT,
-        freeGB FLOAT,
-        usedSpaceGB FLOAT,
-        PRIMARY KEY (id, type,company_id) -- Define a unique key on both id and type columns
-      )
+        CREATE TABLE IF NOT EXISTS repositories (
+          type VARCHAR(255),
+          id VARCHAR(255),
+          company_id INT,
+          name VARCHAR(255),
+          description TEXT,
+          hostId VARCHAR(255),
+          hostName VARCHAR(255),
+          path VARCHAR(255),
+          capacityGB FLOAT,
+          freeGB FLOAT,
+          usedSpaceGB FLOAT,
+          PRIMARY KEY (id, type, company_id) -- Define a unique key on both id and type columns
+        )
       `);
     } catch (error) {
       console.error("Error creating repositories table:", error);
@@ -331,8 +331,20 @@ class AccessTokenManager {
     try {
       const apiCredentialsList = await this.getApiCredentialsFromDB();
 
-      for (const apiCredentials of apiCredentialsList) {
+      for (let i = 0; i < apiCredentialsList.length; i++) {
+        const apiCredentials = apiCredentialsList[i];
         console.log(`Processing Company ID: ${apiCredentials.company_id}`);
+
+        // Check if `ip` and `port` are valid
+        if (!apiCredentials.ip || !apiCredentials.port) {
+          console.error(
+            `Invalid IP or port for Company ID ${apiCredentials.company_id}. Skipping...`
+          );
+          // Remove the company from the list
+          apiCredentialsList.splice(i, 1);
+          i--; // Decrement `i` to account for the removed element
+          continue;
+        }
 
         try {
           await this.fetchAccessToken(
@@ -386,8 +398,9 @@ class AccessTokenManager {
             `Error processing Company ID ${apiCredentials.company_id}:`,
             error
           );
-          // Continue to the next company even if an error occurs
-          continue;
+          // Remove the company from the list
+          apiCredentialsList.splice(i, 1);
+          i--; // Decrement `i` to account for the removed element
         }
       }
 
