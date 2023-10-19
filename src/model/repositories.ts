@@ -114,7 +114,8 @@ export const saveCompany = async (
     });
 
     if (!response.ok) {
-      throw new Error("Failed to save company");
+      const errorMessage = await response.text();
+      throw new Error(`Failed to save company: ${errorMessage}`);
     }
 
     console.log("Company saved successfully");
@@ -134,7 +135,8 @@ export const deleteCompany = async (companyId: number): Promise<void> => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to delete company");
+      const errorMessage = await response.text();
+      throw new Error(`Failed to delete company: ${errorMessage}`);
     }
 
     console.log("Company deleted successfully");
@@ -146,9 +148,11 @@ export const deleteCompany = async (companyId: number): Promise<void> => {
     throw error;
   }
 };
-export const login = async (username: string, password: string): Promise<boolean> => {
+
+
+export const login = async (username: string, password: string) => {
   try {
-    const response = await fetch(`/login`, {
+    const response = await fetch("/loginEN", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -156,14 +160,27 @@ export const login = async (username: string, password: string): Promise<boolean
       body: JSON.stringify({ username, password }),
     });
 
-    if (!response.ok) {
-      throw new Error("Authentication failed");
+    if (response.ok) {
+      const data = await response.json();
+      if (data.token) {
+        // Store the token and return true
+        return true;
+      } else {
+        console.error("Authentication failed: No token received");
+        return false;
+      }
+    } else if (response.status === 401) {
+      console.error("Authentication failed: Invalid credentials");
+      return false;
+    } else if (response.status === 500) {
+      console.error("Authentication failed: Server error");
+      return false;
+    } else {
+      console.error(`Authentication failed: Status ${response.status}`);
+      return false;
     }
-
-    console.log("Authentication successful");
-    return true;
   } catch (error) {
     console.error("Error during authentication:", error);
-    return false;
+    throw new Error("An error occurred while logging in.");
   }
 };

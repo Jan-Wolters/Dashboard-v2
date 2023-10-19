@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useCookies } from "react-cookie";
 import Dashboard from "./vieuw/RoutePath/Dashboard.tsx";
 import Company from "./vieuw/RoutePath/CompanyADD.tsx";
 import CompanyUP from "./vieuw/RoutePath/CompanyUPDATE.tsx";
@@ -13,25 +12,25 @@ import CompanyLOG from "./vieuw/RoutePath/Company_login.tsx";
 import NavBar from "./vieuw/components/NavBar";
 
 function App() {
-  const [cookies, setCookie, removeCookie] = useCookies(["authToken"]);
-  const [isLoggedIn, setIsLoggedIn] = useState(!!cookies.authToken);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogin = () => {
-    // Simulate a successful login for testing purposes
-    setCookie("authToken", "yourAuthToken", { path: "/" }); // Replace with your authentication token
-    setIsLoggedIn(true);
-    console.log("User logged in");
+  const handleLogin = (newToken: string) => {
+    setToken(newToken);
+    // Store the token in local storage
+    localStorage.setItem("authToken", newToken);
   };
 
   const handleLogout = () => {
-    removeCookie("authToken");
-    setIsLoggedIn(false);
+    setToken(null);
+    // Remove the token from local storage
+    localStorage.removeItem("authToken");
     console.log("User logged out");
-    // No need to refresh the page; state change will handle the rendering
   };
 
   const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
-    if (isLoggedIn) {
+    const storedToken = localStorage.getItem("authToken");
+    if (storedToken) {
       return element;
     } else {
       console.log("Redirecting to home page");
@@ -40,30 +39,43 @@ function App() {
   };
 
   useEffect(() => {
-    const authToken = cookies.authToken;
-    setIsLoggedIn(!!authToken);
-  }, [cookies]);
+    // Check if a token is already stored in local storage
+    const storedToken = localStorage.getItem("authToken");
+
+    if (storedToken) {
+      // You may want to validate the token here
+      setToken(storedToken);
+    }
+
+    setLoading(false);
+  }, []); // Use an empty dependency array to ensure it runs only once
+
+  if (loading) {
+    // Show a loading indicator while checking the login status
+    return <div>Loading...</div>;
+  }
 
   return (
-    <Router>
+    <Router basename="/">
       <div className="mt-4">
-        {isLoggedIn && (
+        {token && (
           <div className="alert alert-success" role="alert">
             You are logged in!
           </div>
         )}
-        <NavBar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+        <NavBar isLoggedIn={!!token} onLogout={handleLogout} />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/Login" element={<CompanyLOG onLogin={handleLogin} />} />
           <Route
-            path="/COMPUP"
+            path="/COMUP"
             element={<ProtectedRoute element={<CompanyUP />} />}
           />
           <Route
             path="/COMAD"
             element={<ProtectedRoute element={<Company />} />}
           />
+          <Route element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

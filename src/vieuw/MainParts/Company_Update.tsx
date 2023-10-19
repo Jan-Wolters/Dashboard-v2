@@ -22,7 +22,6 @@ function Company_update() {
     try {
       await deleteCompany(companyId);
       // If the delete operation is successful, reload the page
-      window.location.reload();
     } catch (error) {
       console.error("Error deleting company:", error);
     }

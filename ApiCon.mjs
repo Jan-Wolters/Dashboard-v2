@@ -404,10 +404,66 @@ class AccessTokenManager {
         }
       }
 
+      // Delete companies that are no longer in the apiCredentialsList
+      await this.deleteCompaniesNotInList(apiCredentialsList);
+
       console.log("Success");
     } catch (error) {
       console.error("Error executing API requests:", error);
       console.log("Failed");
+    }
+  }
+
+  async deleteCompaniesNotInList(apiCredentialsList) {
+    try {
+      const connection = await createConnection(mysqlConfig);
+      const existingCompanies = await this.getExistingCompanies(connection);
+
+      for (const company of existingCompanies) {
+        if (
+          !apiCredentialsList.some(
+            (credentials) => credentials.company_id === company.company_id
+          )
+        ) {
+          // Delete the company from the database
+          await this.deleteCompany(connection, company.company_id);
+
+          // Reload data for the deleted company
+          await this.executeApiRequests();
+        }
+      }
+
+      await connection.end();
+    } catch (error) {
+      console.error("Error deleting companies not in the list:", error);
+      throw error;
+    }
+  }
+
+  async getExistingCompanies(connection) {
+    const [rows, fields] = await connection.execute(
+      "SELECT company_id FROM companies"
+    );
+    return rows;
+  }
+
+  async deleteCompany(connection, company_id) {
+    try {
+      const [result] = await connection.execute(
+        "DELETE FROM companies WHERE company_id = ?",
+        [company_id]
+      );
+      if (result.affectedRows === 0) {
+        console.error(`Company ID ${company_id} not found in the database.`);
+      } else {
+        console.log(`Company ID ${company_id} deleted from the database.`);
+      }
+    } catch (error) {
+      console.error(
+        `Error deleting Company ID ${company_id} from the database:`,
+        error
+      );
+      throw error;
     }
   }
 }

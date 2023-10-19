@@ -4,7 +4,8 @@ import { json } from "express";
 import http from "http"; // Import http module
 import { createPool } from "mysql2";
 import cors from "cors";
-
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
@@ -13,7 +14,7 @@ import { setUpVeeam } from "./ApiCon.mjs";
 await setUpVeeam();
 setInterval(() => {
   setUpVeeam();
-}, 2 * 60 * 1000);
+}, 0.05 * 60 * 1000);
 
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
@@ -84,7 +85,30 @@ app.get("/info", getInfo);
 app.get("/infocon", getInfoCon);
 app.delete("/companies/:companyId", deleteCompany);
 app.post("/companies", saveCompany);
-app.post("/login", login);
+app.post("/loginEN", login);
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
+// Serve the React app for other paths (React Router handles the routing)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
+// Define a server route for your '/Login' route
+app.get("/Login", (req, res) => {
+  // Handle the '/Login' route here
+  // This is where you can send the login page or handle login logic on the server
+});
+
+// Define server routes for '/COMUP' and '/COMAD' routes in a similar way
+app.get("/COMUP", (req, res) => {
+  // Handle the '/COMUP' route here
+});
+
+app.get("/COMAD", (req, res) => {
+  // Handle the '/COMAD' route here
+});
 
 async function getInfo(req, res) {
   const companies = await getCompanies();
@@ -157,43 +181,56 @@ async function getInfoCon(req, res) {
   }
 }
 
+// Your login function
 async function login(req, res) {
   try {
     const { username, password } = req.body;
 
-    // Check if username and password are provided
     if (!username || !password) {
       return res
         .status(400)
         .json({ error: "Username and password are required." });
     }
 
-    // Query the database to retrieve user credentials
     const userQuery = "SELECT * FROM users WHERE Username = ?";
     const userRows = await databaseManager.query(userQuery, [username]);
 
-    // Check if the user exists
     if (userRows.length === 0) {
       return res.status(401).json({ error: "Invalid username or password." });
     }
 
     const user = userRows[0];
 
-    // Debugging: Print the retrieved user data
-    console.log("Retrieved user:", user);
+    // Compare the provided password with the password from the database
+    if (password === user.Password) {
+      // Create a token with user information
+      const token = jwt.sign(
+        { username: user.Username },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1800", // half uur
+        }
+      ); // Change 'your-secret-key' to a secure secret key
 
-    // Compare the provided password with the hashed password from the database
-    if (password !== user.Password) {
-      // Debugging: Print the password comparison result
-      console.log("Password comparison failed");
-      return res.status(401).json({ error: "Invalid username or password." });
+      res.json({ token }); // Send the token to the client
+    } else {
+      res.status(401).json({ error: "Invalid username or password." });
     }
-
-    // Successful login
-    res.json({ message: "Login successful" });
   } catch (error) {
     console.error("Error during authentication:", error);
-    res.status(500).json({ error: "An error occurred while logging in." });
+
+    // Log the specific error details
+    if (error instanceof SyntaxError) {
+      console.error("JSON parsing error:", error);
+      return res
+        .status(500)
+        .json({ error: "Invalid JSON data in the request body." });
+    }
+
+    // Handle other potential errors
+    return res
+      .status(500)
+      .json({ error: "An error occurred while logging in." });
   }
 }
 

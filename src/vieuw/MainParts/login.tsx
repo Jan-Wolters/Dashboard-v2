@@ -2,7 +2,7 @@ import { useState } from "react";
 import { login } from "../../model/repositories";
 import { useNavigate } from "react-router-dom";
 
-function Login({ onLogin }: { onLogin: () => void }) {
+function Login({ onLogin }: { onLogin: (username: string) => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,14 +14,11 @@ function Login({ onLogin }: { onLogin: () => void }) {
       setIsLoading(true);
       setError("");
 
-      // Call the login function to authenticate the user
       const isAuthenticated = await login(username, password);
 
       if (isAuthenticated) {
-        // Notify the parent component about successful login
-        onLogin();
-        // Redirect to another route after successful login
-        navigate("/"); // Replace "/" with your desired route
+        onLogin(username);
+        navigate("/"); // Pass the username to the parent component
       } else {
         setError("Invalid credentials. Please try again.");
       }
@@ -69,7 +66,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
               onClick={handleLogin}
               disabled={isLoading}
             >
-              {isLoading ? "Logging In..." : "Login"}
+              {isLoading ? "Logging In..." : "login"}
             </button>
           </form>
         </div>
