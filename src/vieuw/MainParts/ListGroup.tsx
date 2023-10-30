@@ -10,10 +10,20 @@ function Sess({ name }: { name: string }) {
   return <div>{name}</div>;
 }
 
-function CompanyComponent({ name, repositories, sessions }: Company) {
+function Snmp({ disk_description }: { disk_description: string }) {
+  return <div>{disk_description}</div>;
+}
+
+function CompanyComponent({
+  name,
+  repositories,
+  sessions,
+  snmp,
+  snmpf,
+}: Company) {
   const [collapsed, setCollapsed] = useState(true);
 
-  if (!sessions || !repositories) {
+  if (!sessions || !repositories || !snmp || !snmpf) {
     return <div>Company data not available.</div>;
   }
 
@@ -32,7 +42,7 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
     >
       <div className="d-flex flex-column w-100">
         <div className="d-flex justify-content-between align-items-center">
-          <span className="w-100 w-md-25 py-2 px-3 mx-1 font-size">{name}</span>
+          <h3 className="w-100 w-md-25 py-2 px-3 mx-1 font-size">{name}</h3>
           <div className="flex-fill py-2 px-3 mx-1">
             {sessions.length > 0 && sessions[0].resultResult ? (
               <StatusIcon resultMessage={sessions[0].resultResult} />
@@ -50,20 +60,20 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
         {!collapsed && (
           <>
             <div className="my-3">
-              <h2>Repositories:</h2>
+              <h5>Repositories:</h5>
               <ul className="list-group d-flex flex-wrap">
                 {repositories.map((repo, i) => (
                   <li key={i} className="list-group-item d-flex flex-column">
                     <Repo name={repo.name} />
-                    <div className="progress mt-2">
+                    <div className="progress mt-2 ">
                       {repo.capacityGB > 0 ? (
                         <div
-                          className={`progress-bar ${
+                          className={`progress-bar  ${
                             repo.usedSpaceGB / repo.capacityGB >= 0.95
-                              ? "bg-danger"
+                              ? "bg-danger "
                               : repo.usedSpaceGB / repo.capacityGB >= 0.75
-                              ? "bg-warning"
-                              : "bg-success"
+                              ? "bg-warning border "
+                              : "bg-success border "
                           }`}
                           role="progressbar"
                           aria-valuenow={repo.usedSpaceGB}
@@ -82,7 +92,7 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                         </div>
                       ) : (
                         <div
-                          className="progress-bar bg-secondary"
+                          className="progress-bar bg-secondary border border-dark"
                           role="progressbar"
                         >
                           N/A
@@ -94,7 +104,7 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
               </ul>
             </div>
             <div className="my-3">
-              <h2>Sessions:</h2>
+              <h5>Sessions:</h5>
               <ul className="list-group d-flex flex-wrap">
                 {sortedSessions.map((session, i) => (
                   <li key={i} className="list-group-item">
@@ -133,6 +143,80 @@ function CompanyComponent({ name, repositories, sessions }: Company) {
                 ))}
               </ul>
             </div>
+            {snmp && snmp.length > 0 && snmpf && snmpf.length > 0 && (
+              <div className="my-3">
+                <h2>Snmp:</h2>
+                <ul className="list-group d-flex flex-wrap">
+                  {snmp.map((data, i) => (
+                    <li key={i} className="list-group-item">
+                      <div className="row">
+                        <div className="col-md-4">
+                          <Snmp
+                            disk_description={
+                              data.disk_description || "Unknown"
+                            }
+                          />
+                          <div className="d-flex flex-column border">
+                            <div className="py-2">
+                              {data.system_uptime ? (
+                                <div
+                                  className={`progress mt-2 border border-dark`}
+                                >
+                                  <div
+                                    className={`progress-bar ${
+                                      data.disk_used >= data.disk_size
+                                        ? "bg-danger"
+                                        : data.disk_used / data.disk_size >=
+                                          0.95
+                                        ? "bg-danger"
+                                        : data.disk_used / data.disk_size >=
+                                          0.75
+                                        ? "bg-warning"
+                                        : "bg-success"
+                                    }`}
+                                    role="progressbar"
+                                    aria-valuenow={data.disk_used}
+                                    aria-valuemin={0}
+                                    aria-valuemax={data.disk_size}
+                                    style={{
+                                      width: `${
+                                        (data.disk_used / data.disk_size) * 100
+                                      }%`,
+                                    }}
+                                  >
+                                    {(
+                                      (data.disk_used / data.disk_size) *
+                                      100
+                                    ).toFixed(2)}
+                                    %
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>No result available</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <h2>snmpf:</h2>
+                <ul className="list-group d-flex flex-wrap">
+                  {snmpf.map((data, i) => (
+                    <li key={i} className="list-group-item">
+                      <div className="row">
+                        <div className="col-md-4">
+                          <span>{data.name}</span>
+                          <span>{data.systemtime}</span>
+                          <span>{data.product}</span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -12,6 +12,22 @@ export interface Repository {
   usedSpaceGB: number
 }
 
+export interface SNMP {
+  company_id : number;
+  system_name:string;
+  system_uptime:number; 
+  disk_size:number;
+  disk_used:number
+  disk_description: string
+
+}
+export interface SNMPF{
+  company_id : number;
+  name : string;
+  product:string;
+  uptime:number;
+  systemtime:string;
+}
 export interface Session {
   sessions_id: string,
   company_id: number,
@@ -36,6 +52,9 @@ export interface Company {
   name: string;
   repositories: Repository[];
   sessions: Session[];
+  snmp:SNMP[];
+  snmpf:SNMPF[];
+
 }
 export interface CompanyList {
   company_id: number;

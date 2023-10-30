@@ -63,7 +63,14 @@ class AccessTokenManager {
         );
         const responseText = await response.text(); // Log the response content
         console.error("Response Content:", responseText);
-        throw new Error("Failed to fetch access token from APICON");
+
+        if (response.status === 503) {
+          // Change to the appropriate status code
+          console.error("Service unavailable, stopping the process.");
+          process.exit(1); // Stop the process with a non-zero exit code
+        } else {
+          throw new Error("Failed to fetch access token from APICON");
+        }
       }
 
       const data = await response.json();
@@ -71,10 +78,15 @@ class AccessTokenManager {
       // Set the access token and its expiry time
       this.access_token = data.access_token;
       this.tokenExpiryTime = new Date().getTime() + data.expires_in * 1000;
-      console.log(`Access token refreshed: Bearer ${this.access_token}`);
+      //console.log(`Access token refreshed: Bearer ${this.access_token}`);
     } catch (error) {
-      console.error("Error fetching access token:", error);
-      throw error;
+      if (error.code === "EHOSTUNREACH") {
+        console.error("EHOSTUNREACH error. Stopping the process.");
+        process.exit(1); // Stop the process with a non-zero exit code
+      } else {
+        console.error("Error fetching access token:", error);
+        throw error;
+      }
     }
   }
 
@@ -115,7 +127,7 @@ class AccessTokenManager {
       }
 
       // Debugging: Log the retrieved API credentials
-      console.log("API Credentials List:", apiCredentialsList);
+      //console.log("API Credentials List:", apiCredentialsList);
 
       return apiCredentialsList;
     } catch (error) {
@@ -154,7 +166,7 @@ class AccessTokenManager {
       const apiData = await response.json();
 
       // Log the API data to the console
-      console.log("API Data:", apiData);
+      //console.log("API Data:", apiData);
 
       return apiData;
     } catch (error) {
@@ -318,9 +330,9 @@ class AccessTokenManager {
       }
 
       await connection.end();
-      console.log(
+      /* console.log(
         `Data saved to the ${tableName} table for Company ID ${company_id}`
-      );
+      );*/
     } catch (error) {
       console.error("Error saving data to the database:", error);
       throw error;
@@ -330,7 +342,6 @@ class AccessTokenManager {
   async executeApiRequests() {
     try {
       const apiCredentialsList = await this.getApiCredentialsFromDB();
-
       for (let i = 0; i < apiCredentialsList.length; i++) {
         const apiCredentials = apiCredentialsList[i];
         console.log(`Processing Company ID: ${apiCredentials.company_id}`);
@@ -340,11 +351,10 @@ class AccessTokenManager {
           console.error(
             `Invalid IP or port for Company ID ${apiCredentials.company_id}. Skipping...`
           );
-          // Remove the company from the list
-          apiCredentialsList.splice(i, 1);
-          i--; // Decrement `i` to account for the removed element
           continue;
         }
+
+        let success = false; // Track if processing was successful
 
         try {
           await this.fetchAccessToken(
@@ -393,14 +403,46 @@ class AccessTokenManager {
           console.log(
             `Processing Company ID ${apiCredentials.company_id} completed.`
           );
+
+          // Set success to true if the processing was successful
+          success = true;
         } catch (error) {
+          if (error.code === "ERR_INVALID_URL") {
+            console.error(
+              `ERR_INVALID_URL error for Company ID ${apiCredentials.company_id}. Deleting company...`
+            );
+
+            // Delete the company from the database
+            await this.deleteCompany(apiCredentials.company_id);
+          } else if (
+            error.code === "ENOTFOUND" &&
+            error.erroredSysCall === "getaddrinfo"
+          ) {
+            console.error(
+              `ENOTFOUND error for Company ID ${apiCredentials.company_id}. Skipping...`
+            );
+
+            await this.deleteCompany(apiCredentials.company_id);
+            // You can add some additional handling here if needed
+          } else if (error.code === "ENETUNREACH") {
+            console.error(
+              `ENETUNREACH error for Company ID ${apiCredentials.company_id}. Deleting company...`
+            );
+
+            // Delete the company from the database
+            await this.deleteCompany(apiCredentials.company_id);
+          } else {
+            console.error(
+              `Error processing Company ID ${apiCredentials.company_id}:`,
+              error
+            );
+          }
+        }
+
+        if (!success) {
           console.error(
-            `Error processing Company ID ${apiCredentials.company_id}:`,
-            error
+            `All retry attempts failed for Company ID ${apiCredentials.company_id}. Skipping...`
           );
-          // Remove the company from the list
-          apiCredentialsList.splice(i, 1);
-          i--; // Decrement `i` to account for the removed element
         }
       }
 
@@ -447,17 +489,23 @@ class AccessTokenManager {
     return rows;
   }
 
-  async deleteCompany(connection, company_id) {
+  async deleteCompany(company_id) {
     try {
+      const connection = await createConnection(mysqlConfig); // Create a new connection here
+
       const [result] = await connection.execute(
         "DELETE FROM companies WHERE company_id = ?",
         [company_id]
       );
+
       if (result.affectedRows === 0) {
         console.error(`Company ID ${company_id} not found in the database.`);
       } else {
         console.log(`Company ID ${company_id} deleted from the database.`);
       }
+
+      // Close the connection after the operation is complete
+      await connection.end();
     } catch (error) {
       console.error(
         `Error deleting Company ID ${company_id} from the database:`,
@@ -471,6 +519,42 @@ class AccessTokenManager {
 export async function setUpVeeam() {
   const accessTokenManager = new AccessTokenManager();
   console.log("Starting ApiCon.js...");
-  await accessTokenManager.executeApiRequests();
-  console.log("ApiCon.js execution completed.");
+
+  try {
+    await accessTokenManager.executeApiRequests();
+    console.log("ApiCon.js execution completed.");
+  } catch (error) {
+    if (error.message === "Failed to fetch access token from APICON") {
+      // Handle the specific error here
+      console.error(
+        "Failed to fetch access token from APICON: Retrying or taking other actions..."
+      );
+    } else {
+      // Handle other errors
+      console.error("Error in setUpVeeam:", error);
+
+      if (error.code === "EHOSTUNREACH" || error.code === "ENETUNREACH") {
+        // Handle the case where a connection cannot be made
+        console.error("Connection error, deleting the company and its data...");
+
+        // Get the list of companies from the database
+        const apiCredentialsList =
+          await accessTokenManager.getApiCredentialsFromDB();
+
+        for (const apiCredentials of apiCredentialsList) {
+          if (apiCredentials.ip && apiCredentials.port) {
+            try {
+              // Attempt to delete the company and its data
+              await accessTokenManager.deleteCompany(apiCredentials.company_id);
+            } catch (deleteError) {
+              console.error(
+                "Error deleting the company and its data:",
+                deleteError
+              );
+            }
+          }
+        }
+      }
+    }
+  }
 }

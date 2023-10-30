@@ -1,20 +1,22 @@
 /* eslint-env node */
 import express from "express";
 import { json } from "express";
-import http from "http"; // Import http module
+import https from "https"; // Import http module
 import { createPool } from "mysql2";
 import cors from "cors";
-import bcrypt from "bcrypt";
+
 import jwt from "jsonwebtoken";
 import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 
 import { setUpVeeam } from "./ApiCon.mjs";
-await setUpVeeam();
+import { setUpSNMP } from "./SNMPCon.mjs";
+
+await setUpVeeam(), setUpSNMP();
 setInterval(() => {
-  setUpVeeam();
-}, 0.05 * 60 * 1000);
+  setUpVeeam(), setUpSNMP();
+}, 0.05 * 60 * 1000); //15seconden
 
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
@@ -89,9 +91,21 @@ app.post("/loginEN", login);
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
+app.get("/checkStatus", (req, res) => {
+  checkStatus()
+    .then((statusCode) => {
+      // Further processing can be done based on the status code here
+      console.log("Status code from checkStatus:", statusCode);
+      res.status(statusCode).send(`3CX Status Code: ${statusCode}`);
+    })
+    .catch((error) => {
+      console.error("Error in checkStatus:", error);
+      res.status(500).send("Failed to retrieve 3CX status.");
+    });
+});
 
 // Serve the React app for other paths (React Router handles the routing)
-app.get("*", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
@@ -117,6 +131,8 @@ async function getInfo(req, res) {
     companies.map(async (company) => {
       company.sessions = await getSessions(company.company_id);
       company.repositories = await getRepos(company.company_id);
+      company.snmp = await getSnmp(company.company_id);
+      company.snmpf = await getSnmpF(company.company_id);
       return company;
     })
   );
@@ -138,6 +154,22 @@ async function getRepos(companyId) {
   const reposQuery = `SELECT * FROM repositories WHERE company_id = ${companyId}`;
   return databaseManager.query(reposQuery);
 }
+
+async function getSnmp(companyId) {
+  const snmpQuery = `
+    SELECT * 
+    FROM snmpdatawalk AS walk
+    INNER JOIN snmpdataget AS get ON walk.company_id = get.company_id
+    WHERE walk.company_id = ${companyId};
+  `;
+  return databaseManager.query(snmpQuery);
+}
+async function getSnmpF(companyId) {
+  const reposQuery = `SELECT * FROM firewallsnmpdata WHERE company_id = ${companyId}`;
+  return databaseManager.query(reposQuery);
+}
+
+//async function getSnmp() {}
 
 async function getInfoCon(req, res) {
   try {
@@ -181,7 +213,8 @@ async function getInfoCon(req, res) {
   }
 }
 
-// Your login function
+// login function
+
 async function login(req, res) {
   try {
     const { username, password } = req.body;
@@ -192,8 +225,12 @@ async function login(req, res) {
         .json({ error: "Username and password are required." });
     }
 
-    const userQuery = "SELECT * FROM users WHERE Username = ?";
-    const userRows = await databaseManager.query(userQuery, [username]);
+    const userQuery =
+      "SELECT * FROM users WHERE BINARY Username = ? AND BINARY Password = ?";
+    const userRows = await databaseManager.query(userQuery, [
+      username,
+      password,
+    ]);
 
     if (userRows.length === 0) {
       return res.status(401).json({ error: "Invalid username or password." });
@@ -201,21 +238,19 @@ async function login(req, res) {
 
     const user = userRows[0];
 
-    // Compare the provided password with the password from the database
-    if (password === user.Password) {
-      // Create a token with user information
-      const token = jwt.sign(
-        { username: user.Username },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1800", // half uur
-        }
-      ); // Change 'your-secret-key' to a secure secret key
+    // Set the token expiration to 30 minutes (in seconds)
+    const tokenExpiration = Math.floor(Date.now() / 1000) + 0.25 * 60; // 15 sec
 
-      res.json({ token }); // Send the token to the client
-    } else {
-      res.status(401).json({ error: "Invalid username or password." });
-    }
+    // Create a token with user information and the calculated expiration time
+    const token = jwt.sign(
+      { username: user.Username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: tokenExpiration,
+      }
+    ); // Change 'your-secret-key' to a secure secret key
+
+    res.json({ token, expiresIn: tokenExpiration }); // Send the token and expiration time to the client
   } catch (error) {
     console.error("Error during authentication:", error);
 
@@ -235,6 +270,32 @@ async function login(req, res) {
 }
 
 console.log("Starting ApiCon.js...");
+
+const CXUrl = "https://vpbx49.qonnected.net/webclient/#/login"; // Change to HTTP
+
+function checkStatus() {
+  return new Promise((resolve, reject) => {
+    const statusRequest = https.get(CXUrl, (statusResponse) => {
+      if (statusResponse.statusCode === 200) {
+        // Successfully retrieved the status with a 200 status code
+        console.log("3CX Status Code:", 200);
+        resolve(200);
+      } else {
+        // Returned an unexpected status code when requesting the status
+        console.log("3CX Status Code:", statusResponse.statusCode);
+        reject(statusResponse.statusCode);
+      }
+    });
+
+    statusRequest.on("error", (error) => {
+      console.error("Failed to retrieve 3CX status. Error:", error);
+      reject(error);
+    });
+
+    // End the status request
+    statusRequest.end();
+  });
+}
 
 // Start the server
 app.listen(port, () => {
