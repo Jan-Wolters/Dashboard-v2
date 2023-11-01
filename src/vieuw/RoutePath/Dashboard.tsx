@@ -41,12 +41,21 @@ function Dashboard() {
         window.innerWidth < 768 ? "mx-1" : "mx-md-5"
       }`}
     >
-      {" "}
       <CompanyGroup />
       {loading ? (
         <p>Loading...</p>
       ) : (
-        statusContent !== null && <p>Status 3CX: {statusContent}</p>
+        statusContent !== null && (
+          <div className="status-content text-center">
+            <p
+              className={`status-text ${
+                statusContent === "online" ? "online" : "offline"
+              }`}
+            >
+              Status 3CX: {statusContent}
+            </p>
+          </div>
+        )
       )}
     </div>
   );

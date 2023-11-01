@@ -33,8 +33,8 @@ const ip = process.env.PROJECT_IP; // Change the IP address here
 const port = process.env.PROJECT_PORT;
 
 app.use(cors());
+app.use(json());
 
-app.use(express.json());
 app.use(express.static(path.resolve(__dirname, "./dist")));
 
 // Database configuration
@@ -85,10 +85,8 @@ app.use(async (req, res, next) => {
 // Routes
 app.get("/info", getInfo);
 app.get("/infocon", getInfoCon);
-app.get("/Commag", getCom);
 app.delete("/companies/:companyId", deleteCompany);
 app.post("/companies", saveCompany);
-app.post("/SNMPCompany", saveSNMPCompany);
 app.post("/loginEN", login);
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
@@ -139,11 +137,11 @@ async function getInfo(req, res) {
     })
   );
 
-  res.json(rows);
+  res.send(rows);
 }
 
 async function getCompanies() {
-  const companyQuery = `SELECT company_id , name, ip, port FROM companies`;
+  const companyQuery = `SELECT * FROM companies`;
   return databaseManager.query(companyQuery);
 }
 
@@ -170,22 +168,8 @@ async function getSnmpF(companyId) {
   const reposQuery = `SELECT * FROM firewallsnmpdata WHERE company_id = ${companyId}`;
   return databaseManager.query(reposQuery);
 }
-async function getCom(req, res) {
-  const companyQuery = `SELECT company_id, name FROM companies`;
 
-  try {
-    const result = await databaseManager.query(companyQuery);
-    console.log(result); // Log the result to the console
-
-    // Send the result as a JSON response
-    res.status(200).json(result);
-  } catch (error) {
-    // Handle any errors and send an error response
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching companies" });
-  }
-}
+//async function getSnmp() {}
 
 async function getInfoCon(req, res) {
   try {
@@ -324,26 +308,6 @@ function saveCompany(req, res) {
   // Save the form data to the database
   const query = `INSERT INTO companies (name, ip, port, veaamUsername, veaamPassword) VALUES (?, ?, ?, ?, ?)`;
   const values = [name, ip, port, veaamUsername, veaamPassword];
-
-  databaseManager
-    .query(query, values)
-    .then((results) => {
-      console.log("Company information saved successfully");
-      res.json({ message: "Company information saved successfully" });
-    })
-    .catch((error) => {
-      console.error("Error executing INSERT query:", error);
-      res
-        .status(500)
-        .json({ error: "An error occurred while saving company information." });
-    });
-}
-function saveSNMPCompany(req, res) {
-  const { company_id, ip, port, community, type } = req.body;
-
-  // Save the form data to the database
-  const query = `INSERT INTO companysnmp (company_id, ip, port, community, type) VALUES (?, ?, ?, ?, ?)`;
-  const values = [company_id, ip, port, community, type];
 
   databaseManager
     .query(query, values)

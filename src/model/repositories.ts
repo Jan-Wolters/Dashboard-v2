@@ -1,5 +1,6 @@
 import Company from "../vieuw/RoutePath/CompanyADD";
 
+
 export interface Repository {
   id: number,
   name: string,
@@ -11,7 +12,6 @@ export interface Repository {
   freeGB: number,
   usedSpaceGB: number
 }
-
 export interface SNMP {
   company_id : number;
   system_name:string;
@@ -56,6 +56,7 @@ export interface Company {
   snmpf:SNMPF[];
 
 }
+
 export interface CompanyList {
   company_id: number;
   company_name: string;
@@ -94,9 +95,12 @@ export const fetchData = async (): Promise<Company[]> => {
   }
 };
 
+
+
+
 export const fetchDatacon = async (): Promise<CompanyList[] | null> => {
   try {
-    const endpoint = `/infocon`;
+    const endpoint = `localhost/infocon`;
     console.log("Fetching data from:", endpoint);
 
     const response = await fetch(endpoint);
@@ -146,6 +150,8 @@ export const saveCompany = async (
     throw error;
   }
 };
+
+
 
 export const deleteCompany = async (companyId: number): Promise<void> => {
   try {

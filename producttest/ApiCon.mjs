@@ -28,17 +28,6 @@ class AccessTokenManager {
   constructor() {
     this.access_token = null;
     this.tokenExpiryTime = null;
-
-    this.formatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Europe/Paris", // Use the timeZone identifier for CET
-      hour12: false, // Set to 24-hour format (optional)
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
   }
 
   async fetchAccessToken(ip, port, veaamUsername, veaamPassword) {
@@ -138,7 +127,7 @@ class AccessTokenManager {
       }
 
       // Debugging: Log the retrieved API credentials
-      console.log("API Credentials List:", apiCredentialsList);
+      //console.log("API Credentials List:", apiCredentialsList);
 
       return apiCredentialsList;
     } catch (error) {
@@ -241,8 +230,6 @@ class AccessTokenManager {
     }
   }
 
-  // Create a DateTimeFormat object and specify the timeZone option
-
   async saveDataToDatabase(records, company_id, tableName) {
     try {
       const connection = await createConnection(mysqlConfig);
@@ -261,27 +248,31 @@ class AccessTokenManager {
         let values = [];
 
         if (tableName === "sessions") {
-          // Parse creationTime and endTime as ISO dates
-          const creationTimeDate = new Date(record.creationTime);
+          // Format creationTime and endTime to ISO 8601 format
+          const formattedCreationTime = new Date(
+            record.creationTime
+          ).toISOString();
           const endTimeDate = new Date(record.endTime);
+          endTimeDate.setHours(endTimeDate.getHours() + 2); // Add 2 hours
+          const formattedEndTime = endTimeDate.toISOString();
 
           sql = `INSERT INTO sessions (id, company_id, name, activityId, sessionType, creationTime, endTime, state, progressPercent, resultResult, resultMessage, resultIsCanceled, resourceId, resourceReference, parentSessionId, usn)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-            name = VALUES(name),
-            activityId = VALUES(activityId),
-            sessionType = VALUES(sessionType),
-            creationTime = VALUES(creationTime),
-            endTime = VALUES(endTime),
-            state = VALUES(state),
-            progressPercent = VALUES(progressPercent),
-            resultResult = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultResult)),
-            resultMessage = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultMessage)),
-            resultIsCanceled = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultIsCanceled)),
-            resourceId = VALUES(resourceId),
-            resourceReference = VALUES(resourceReference),
-            parentSessionId = VALUES(parentSessionId),
-            usn = VALUES(usn)`;
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                activityId = VALUES(activityId),
+                sessionType = VALUES(sessionType),
+                creationTime = VALUES(creationTime),
+                endTime = VALUES(endTime),
+                state = VALUES(state),
+                progressPercent = VALUES(progressPercent),
+                resultResult = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultResult)),
+                resultMessage = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultMessage)),
+                resultIsCanceled = IF(VALUES(progressPercent) < 100, NULL, VALUES(resultIsCanceled)),
+                resourceId = VALUES(resourceId),
+                resourceReference = VALUES(resourceReference),
+                parentSessionId = VALUES(parentSessionId),
+                usn = VALUES(usn)`;
 
           values = [
             record.id,
@@ -289,8 +280,8 @@ class AccessTokenManager {
             record.name,
             record.activityId,
             record.sessionType,
-            creationTimeDate.toISOString(), // Use ISO formatted dates
-            endTimeDate.toISOString(), // Use ISO formatted dates
+            formattedCreationTime, // Use the formatted creationTime
+            formattedEndTime, // Use the formatted endTime with 2 hours added
             record.state,
             record.progressPercent,
             record.progressPercent < 100 ? null : record.result.result,
@@ -303,17 +294,17 @@ class AccessTokenManager {
           ];
         } else if (tableName === "repositories") {
           sql = `INSERT INTO repositories (type, id, company_id, name, description, hostId, hostName, path, capacityGB, freeGB, usedSpaceGB)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-            type = VALUES(type),
-            name = VALUES(name),
-            description = VALUES(description),
-            hostId = CASE WHEN id = VALUES(id) THEN VALUES(hostId) ELSE hostId END,
-            hostName = CASE WHEN id = VALUES(id) THEN VALUES(hostName) ELSE hostName END,
-            path = VALUES(path),
-            capacityGB = VALUES(capacityGB),
-            freeGB = VALUES(freeGB),
-            usedSpaceGB = VALUES(usedSpaceGB)`;
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                type = VALUES(type),
+                name = VALUES(name),
+                description = VALUES(description),
+                hostId = CASE WHEN id = VALUES(id) THEN VALUES(hostId) ELSE hostId END,
+                hostName = CASE WHEN id = VALUES(id) THEN VALUES(hostName) ELSE hostName END,
+                path = VALUES(path),
+                capacityGB = VALUES(capacityGB),
+                freeGB = VALUES(freeGB),
+                usedSpaceGB = VALUES(usedSpaceGB)`;
 
           values = [
             record.type,
@@ -339,6 +330,9 @@ class AccessTokenManager {
       }
 
       await connection.end();
+      /* console.log(
+        `Data saved to the ${tableName} table for Company ID ${company_id}`
+      );*/
     } catch (error) {
       console.error("Error saving data to the database:", error);
       throw error;

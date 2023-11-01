@@ -1,14 +1,21 @@
-import CompanyAd from "../MainParts/Company_Add.tsx";
+import { useState } from "react";
+import { Container, Button } from "react-bootstrap";
+import CompanyAdd from "../MainParts/Company_Add";
+import CompanySNMPAdd from "../MainParts/Company_AddSNMP";
 
 function Company() {
+  const [showCompanyForm, setShowCompanyForm] = useState(true);
   return (
-    <div
-      className={`w-auto overflow-hidden shadow-lg ${
-        window.innerWidth < 768 ? "mx-2" : "mx-md-5"
-      }`}
-    >
-      <CompanyAd />{" "}
-    </div>
+    <Container className="py-5">
+      <Button
+        onClick={() => setShowCompanyForm(!showCompanyForm)}
+        variant="secondary"
+      >
+        {showCompanyForm ? "Add SNMP Company" : "Add Company"}
+      </Button>
+
+      {showCompanyForm ? <CompanyAdd /> : <CompanySNMPAdd />}
+    </Container>
   );
 }
 

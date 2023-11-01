@@ -145,71 +145,62 @@ function CompanyComponent({
             </div>
             {snmp && snmp.length > 0 && snmpf && snmpf.length > 0 && (
               <div className="my-3">
-                <h2>Snmp:</h2>
+                <h2 className="mb-3">Snmp:</h2>
+
                 <ul className="list-group d-flex flex-wrap">
                   {snmp.map((data, i) => (
-                    <li key={i} className="list-group-item">
-                      <div className="row">
-                        <div className="col-md-4">
-                          <Snmp
-                            disk_description={
-                              data.disk_description || "Unknown"
-                            }
-                          />
-                          <div className="d-flex flex-column border">
-                            <div className="py-2">
-                              {data.system_uptime ? (
-                                <div
-                                  className={`progress mt-2 border border-dark`}
-                                >
-                                  <div
-                                    className={`progress-bar ${
-                                      data.disk_used >= data.disk_size
-                                        ? "bg-danger"
-                                        : data.disk_used / data.disk_size >=
-                                          0.95
-                                        ? "bg-danger"
-                                        : data.disk_used / data.disk_size >=
-                                          0.75
-                                        ? "bg-warning"
-                                        : "bg-success"
-                                    }`}
-                                    role="progressbar"
-                                    aria-valuenow={data.disk_used}
-                                    aria-valuemin={0}
-                                    aria-valuemax={data.disk_size}
-                                    style={{
-                                      width: `${
-                                        (data.disk_used / data.disk_size) * 100
-                                      }%`,
-                                    }}
-                                  >
-                                    {(
-                                      (data.disk_used / data.disk_size) *
-                                      100
-                                    ).toFixed(2)}
-                                    %
-                                  </div>
-                                </div>
-                              ) : (
-                                <div>No result available</div>
-                              )}
-                            </div>
-                          </div>
+                    <li key={i} className="list-group-item d-flex flex-column">
+                      <Snmp
+                        disk_description={data.disk_description || "Unknown"}
+                      />
+                      {/* Assuming Repo component is used to display disk_description */}
+                      <div className="progress mt-2 border border-dark">
+                        <div
+                          className={`progress-bar ${
+                            data.disk_used >= data.disk_size
+                              ? "bg-danger"
+                              : data.disk_used / data.disk_size >= 0.95
+                              ? "bg-danger"
+                              : data.disk_used / data.disk_size >= 0.75
+                              ? "bg-warning"
+                              : "bg-success"
+                          }`}
+                          role="progressbar"
+                          aria-valuenow={data.disk_used}
+                          aria-valuemin={0}
+                          aria-valuemax={data.disk_size}
+                          style={{
+                            width: `${
+                              (data.disk_used / data.disk_size) * 100
+                            }%`,
+                          }}
+                        >
+                          {((data.disk_used / data.disk_size) * 100).toFixed(2)}
+                          %
                         </div>
                       </div>
                     </li>
                   ))}
                 </ul>
-                <h2>snmpf:</h2>
+
                 <ul className="list-group d-flex flex-wrap">
                   {snmpf.map((data, i) => (
                     <li key={i} className="list-group-item">
                       <div className="row">
-                        <div className="col-md-4">
-                          <span>{data.name}</span>
-                          <span>{data.systemtime}</span>
-                          <span>{data.product}</span>
+                        <div className="col-md-6">
+                          <div className="card">
+                            <div className="card-body">
+                              <h5 className="card-title">
+                                <strong>Name:</strong> {data.name}
+                              </h5>
+                              <p className="card-text">
+                                <strong>System Time:</strong> {data.systemtime}
+                              </p>
+                              <p className="card-text">
+                                <strong>Product:</strong> {data.product}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </li>
