@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"target": "ES6",
+		"lib": [
+			"ES2020",
+			"ESNext"
+		],
+		"allowSyntheticDefaultImports": true,
+		"module": "CommonJS",
+		"resolveJsonModule": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true
+	},
+	"include": [
+		"src"
+	]
+}

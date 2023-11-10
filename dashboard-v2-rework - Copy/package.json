@@ -1,0 +1,16 @@
+{
+	"name": "dashboard-v2-rework",
+	"version": "0.0.1",
+	"main": "dist/index.js",
+	"scripts": {
+		"start": "cross-env NODE_ENV=production node .",
+		"build": "node ./scripts/build.js",
+		"watch": "concurrently npm:watch-*",
+		"watch-app": "cd app && npm run watch",
+		"watch-server": "cd server && npm run watch"
+	},
+	"devDependencies": {
+		"concurrently": "^8.2.2",
+		"cross-env": "^7.0.3"
+	}
+}
